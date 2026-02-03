@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <bitmap android:gravity="fill" android:src="@drawable/background"/>
+    </item>
+    <!-- Keep the background full-bleed, but center the splash image so it isn't
+         distorted on devices with different aspect ratios (older Androids
+         often scale bitmaps to fill the screen when gravity="fill"). -->
+    <item>
+        <bitmap android:gravity="center" android:src="@drawable/splash"/>
+    </item>
+</layer-list>
