@@ -10,6 +10,7 @@ import 'package:video_player/video_player.dart';
 import '../global/enumMethod.dart';
 import '../global/globalUI.dart';
 import '../global/globalUrl.dart';
+import 'journify_controller.dart';
 import '../model/getUserAccountTypes.dart';
 import '../view/Login/loginPassWordScreen.dart';
 import '../view/Login/loginUserNameScreen.dart';
@@ -18,6 +19,8 @@ import '../view/Login/verificationRegistration.dart';
 import '../view/screen/mainView.dart';
 
 class LoginAndRegisterControl extends GetxController {
+  final JournifyBridgeController journifyController =
+      Get.find<JournifyBridgeController>();
   RxBool validation = false.obs;
   RxBool isProgress = false.obs;
   RxBool isForgotPassword = false.obs;
@@ -317,6 +320,22 @@ class LoginAndRegisterControl extends GetxController {
           "ObjectSettings": {"MetaData": false},
         },
       );
+      writeGetStorage(loginKey, data['ApiObjectData'][0]);
+      isProgress.value = false;
+      validation.value = false;
+      getUserAccountTypes2();
+      await myRequest(
+        url: update,
+        method: HttpMethod.put,
+        body: {
+          "Object": "web_users",
+          "filters": "where  Email = '$email' ",
+          "Values": {'Token': '$fcmToken'},
+          "ObjectSettings": {"MetaData": false},
+        },
+      );
+      // Journify - Track Login
+      journifyController.trackLogin(method: 'email_password');
       Get.offAll(MainView());
     }
     if (data['ApiObjectData'].isEmpty) {
@@ -361,6 +380,21 @@ class LoginAndRegisterControl extends GetxController {
         },
       );
       getUserAccountTypes2();
+      await myRequest(
+        url: update,
+        method: HttpMethod.put,
+        body: {
+          "Object": "web_users",
+          "filters": "where  IdentityNumber = '$identificationNumber' ",
+          "Values": {'Token': '$fcmToken'},
+          "ObjectSettings": {"MetaData": false},
+        },
+      );
+      getUserAccountTypes2();
+      // Journify - Track Login
+      journifyController.trackLogin(
+        method: 'biometric',
+      ); // Treating ID Number as generic/biometric for now, or use 'other'
       Get.offAll(MainView());
     }
     if (data['ApiObjectData'].isEmpty) {
@@ -604,6 +638,18 @@ class LoginAndRegisterControl extends GetxController {
           "ObjectSettings": {"MetaData": false},
         },
       );
+      await myRequest(
+        url: update,
+        method: HttpMethod.put,
+        body: {
+          "Object": "web_users",
+          "filters": "where  IdentityNumber = '$identificationNumber' ",
+          "Values": {'Token': '$fcmToken'},
+          "ObjectSettings": {"MetaData": false},
+        },
+      );
+      // Journify - Track Sign Up
+      journifyController.trackSignUp(method: 'email_password');
       Get.offAll(
         MainView(lastPageNavigator: LoginUserName(isFromSplashScreen: false)),
       );
@@ -636,6 +682,7 @@ class LoginAndRegisterControl extends GetxController {
       isRegistrationFieldsFull.value = false;
     }
   }
+
   @override
   void onClose() {
     firstNameController.dispose();

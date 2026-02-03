@@ -80,177 +80,164 @@ class _MainViewState extends State<MainView> {
         SystemNavigator.pop();
       },
       child: GetBuilder<ThemeController>(
-        builder: (controller) => AnnotatedRegion<SystemUiOverlayStyle>(
-          // This forces the system UI to stay white even if the theme changes
-          value: SystemUiOverlayStyle(
-            systemNavigationBarColor: themeModeValue == 'dark'
+        builder: (controller) => Scaffold(
+          backgroundColor: Colors.grey,
+          appBar: appBarMainPage(context, title: 'main', isLogin: isLogin),
+          body: children[_currentIndex],
+          bottomNavigationBar: BottomNavigationBar(
+            backgroundColor: themeModeValue == 'dark'
                 ? Colors.black
                 : Colors.white,
-            systemNavigationBarIconBrightness: Brightness.dark,
-            statusBarColor: themeModeValue == 'dark'
-                ? Colors.black
-                : Colors.white,
-            statusBarIconBrightness: Brightness.dark,
-          ),
-          child: Scaffold(
-            backgroundColor: Colors.grey,
-            appBar: appBarMainPage(context, title: 'main', isLogin: isLogin),
-            body: children[_currentIndex],
-            bottomNavigationBar: BottomNavigationBar(
-              backgroundColor: themeModeValue == 'dark'
-                  ? Colors.black
-                  : Colors.white,
-              type: BottomNavigationBarType.fixed,
-              selectedFontSize: navFontSize,
-              unselectedFontSize: navFontSize,
-              iconSize: navIconSize,
-              selectedItemColor: Colors.green,
-              onTap: onTabTapped,
-              // new
-              currentIndex: _currentIndex,
-              // new
-              items: isLogin == null
-                  ? [
-                      // BottomNavigationBarItem(
-                      //     icon: Padding(
-                      //         padding: const EdgeInsets.all(2),
-                      //         child: SvgPicture.asset(
-                      //           svgMain,
-                      //           colorFilter: ColorFilter.mode(
-                      //               (_currentIndex == 0
-                      //                       ? Colors.green[500]
-                      //                       : null) ??
-                      //               BlendMode.srcIn),
-                      //     label: 'main'.tr),
-                      BottomNavigationBarItem(
-                        icon: Padding(
-                          padding: navPadding,
-                          child: SvgPicture.asset(
-                            svgShop,
-                            colorFilter: ColorFilter.mode(
-                              (_currentIndex == 0 ? Colors.green[500] : null) ??
-                                  Color(0xFF9E9E9E),
-                              BlendMode.srcIn,
-                            ),
+            type: BottomNavigationBarType.fixed,
+            selectedFontSize: navFontSize,
+            unselectedFontSize: navFontSize,
+            iconSize: navIconSize,
+            selectedItemColor: Colors.green,
+            onTap: onTabTapped,
+            // new
+            currentIndex: _currentIndex,
+            // new
+            items: isLogin == null
+                ? [
+                    // BottomNavigationBarItem(
+                    //     icon: Padding(
+                    //         padding: const EdgeInsets.all(2),
+                    //         child: SvgPicture.asset(
+                    //           svgMain,
+                    //           colorFilter: ColorFilter.mode(
+                    //               (_currentIndex == 0
+                    //                       ? Colors.green[500]
+                    //                       : null) ??
+                    //               BlendMode.srcIn),
+                    //     label: 'main'.tr),
+                    BottomNavigationBarItem(
+                      icon: Padding(
+                        padding: navPadding,
+                        child: SvgPicture.asset(
+                          svgShop,
+                          colorFilter: ColorFilter.mode(
+                            (_currentIndex == 0 ? Colors.green[500] : null) ??
+                                Color(0xFF9E9E9E),
+                            BlendMode.srcIn,
                           ),
                         ),
-                        label: 'theShop'.tr,
                       ),
-                      BottomNavigationBarItem(
-                        icon: Padding(
-                          padding: navPadding,
-                          child: SvgPicture.asset(
-                            svgBasket,
-                            colorFilter: ColorFilter.mode(
-                              (_currentIndex == 1 ? Colors.green[500] : null) ??
-                                  Color(0xFF9E9E9E),
-                              BlendMode.srcIn,
-                            ),
+                      label: 'theShop'.tr,
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Padding(
+                        padding: navPadding,
+                        child: SvgPicture.asset(
+                          svgBasket,
+                          colorFilter: ColorFilter.mode(
+                            (_currentIndex == 1 ? Colors.green[500] : null) ??
+                                Color(0xFF9E9E9E),
+                            BlendMode.srcIn,
                           ),
                         ),
-                        label: 'basket'.tr,
                       ),
-                      BottomNavigationBarItem(
-                        icon: Padding(
-                          padding: navPadding,
-                          child: SvgPicture.asset(
-                            svgSearch,
-                            colorFilter: ColorFilter.mode(
-                              (_currentIndex == 2 ? Colors.green[500] : null) ??
-                                  Color(0xFF9E9E9E),
-                              BlendMode.srcIn,
-                            ),
+                      label: 'basket'.tr,
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Padding(
+                        padding: navPadding,
+                        child: SvgPicture.asset(
+                          svgSearch,
+                          colorFilter: ColorFilter.mode(
+                            (_currentIndex == 2 ? Colors.green[500] : null) ??
+                                Color(0xFF9E9E9E),
+                            BlendMode.srcIn,
                           ),
                         ),
-                        label: 'search'.tr,
                       ),
-                    ]
-                  : [
-                      BottomNavigationBarItem(
-                        icon: Padding(
-                          padding: navPadding,
-                          child: SvgPicture.asset(
-                            svgMain,
-                            colorFilter: ColorFilter.mode(
-                              (_currentIndex == 0 ? Colors.green[500] : null) ??
-                                  Color(0xFF9E9E9E),
-                              BlendMode.srcIn,
-                            ),
+                      label: 'search'.tr,
+                    ),
+                  ]
+                : [
+                    BottomNavigationBarItem(
+                      icon: Padding(
+                        padding: navPadding,
+                        child: SvgPicture.asset(
+                          svgMain,
+                          colorFilter: ColorFilter.mode(
+                            (_currentIndex == 0 ? Colors.green[500] : null) ??
+                                Color(0xFF9E9E9E),
+                            BlendMode.srcIn,
                           ),
                         ),
-                        label: 'main'.tr,
                       ),
-                      BottomNavigationBarItem(
-                        icon: Padding(
-                          padding: navPadding,
-                          child: SvgPicture.asset(
-                            svgShop,
-                            colorFilter: ColorFilter.mode(
-                              (_currentIndex == 1 ? Colors.green[500] : null) ??
-                                  Color(0xFF9E9E9E),
-                              BlendMode.srcIn,
-                            ),
+                      label: 'main'.tr,
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Padding(
+                        padding: navPadding,
+                        child: SvgPicture.asset(
+                          svgShop,
+                          colorFilter: ColorFilter.mode(
+                            (_currentIndex == 1 ? Colors.green[500] : null) ??
+                                Color(0xFF9E9E9E),
+                            BlendMode.srcIn,
                           ),
                         ),
-                        label: 'theShop'.tr,
                       ),
-                      BottomNavigationBarItem(
-                        icon: Padding(
-                          padding: navPadding,
-                          child: SvgPicture.asset(
-                            svgBasket,
-                            colorFilter: ColorFilter.mode(
-                              (_currentIndex == 2 ? Colors.green[500] : null) ??
-                                  Color(0xFF9E9E9E),
-                              BlendMode.srcIn,
-                            ),
+                      label: 'theShop'.tr,
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Padding(
+                        padding: navPadding,
+                        child: SvgPicture.asset(
+                          svgBasket,
+                          colorFilter: ColorFilter.mode(
+                            (_currentIndex == 2 ? Colors.green[500] : null) ??
+                                Color(0xFF9E9E9E),
+                            BlendMode.srcIn,
                           ),
                         ),
-                        label: 'basket'.tr,
                       ),
-                      BottomNavigationBarItem(
-                        icon: Padding(
-                          padding: navPadding,
-                          child: SvgPicture.asset(
-                            svgFavorite,
-                            colorFilter: ColorFilter.mode(
-                              (_currentIndex == 3 ? Colors.green[500] : null) ??
-                                  const Color(0xFF9E9E9E),
-                              BlendMode.srcIn,
-                            ),
+                      label: 'basket'.tr,
+                    ),
+                    BottomNavigationBarItem(
+                      icon: Padding(
+                        padding: navPadding,
+                        child: SvgPicture.asset(
+                          svgFavorite,
+                          colorFilter: ColorFilter.mode(
+                            (_currentIndex == 3 ? Colors.green[500] : null) ??
+                                const Color(0xFF9E9E9E),
+                            BlendMode.srcIn,
                           ),
                         ),
-                        label: 'favorite'.tr,
                       ),
-                      // BottomNavigationBarItem(
-                      //     icon: Padding(
-                      //         padding: const EdgeInsets.all(10),
-                      //         child: SvgPicture.asset(
-                      //           svgCompare,
-                      //           colorFilter: ColorFilter.mode(
-                      //               (_currentIndex == 4
-                      //                       ? Colors.green[500]
-                      //                       : null) ??
-                      //                   Color(0xFF9E9E9E),
-                      //               BlendMode.srcIn),
-                      //         )),
-                      //     label: 'compare'.tr),
-                      BottomNavigationBarItem(
-                        icon: Padding(
-                          padding: navPadding,
-                          child: SvgPicture.asset(
-                            svgSearch,
-                            colorFilter: ColorFilter.mode(
-                              (_currentIndex == 4 ? Colors.green[500] : null) ??
-                                  const Color(0xFF9E9E9E),
-                              BlendMode.srcIn,
-                            ),
+                      label: 'favorite'.tr,
+                    ),
+                    // BottomNavigationBarItem(
+                    //     icon: Padding(
+                    //         padding: const EdgeInsets.all(10),
+                    //         child: SvgPicture.asset(
+                    //           svgCompare,
+                    //           colorFilter: ColorFilter.mode(
+                    //               (_currentIndex == 4
+                    //                       ? Colors.green[500]
+                    //                       : null) ??
+                    //                   Color(0xFF9E9E9E),
+                    //               BlendMode.srcIn),
+                    //         )),
+                    //     label: 'compare'.tr),
+                    BottomNavigationBarItem(
+                      icon: Padding(
+                        padding: navPadding,
+                        child: SvgPicture.asset(
+                          svgSearch,
+                          colorFilter: ColorFilter.mode(
+                            (_currentIndex == 4 ? Colors.green[500] : null) ??
+                                const Color(0xFF9E9E9E),
+                            BlendMode.srcIn,
                           ),
                         ),
-                        label: 'search'.tr,
                       ),
-                    ],
-            ),
+                      label: 'search'.tr,
+                    ),
+                  ],
           ),
         ),
       ),

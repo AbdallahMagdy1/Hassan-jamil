@@ -55,6 +55,20 @@ class JournifyBridgeController extends GetxController {
 
     try {
       switch (type) {
+        case "login":
+          final method = p["method"];
+          if (method is! String)
+            return {"ok": false, "error": "login_missing_method"};
+          await trackLogin(method: method);
+          return {"ok": true};
+
+        case "sign_up":
+          final method = p["method"];
+          if (method is! String)
+            return {"ok": false, "error": "sign_up_missing_method"};
+          await trackSignUp(method: method);
+          return {"ok": true};
+
         case "track":
           final event = p["event"];
           final props = p["properties"];
@@ -99,6 +113,14 @@ class JournifyBridgeController extends GetxController {
       debugPrint("Journify bridge error: $e\n$st");
       return {"ok": false, "error": "exception", "message": e.toString()};
     }
+  }
+
+  Future<void> trackLogin({required String method}) async {
+    await journify.track("login", properties: {"method": method});
+  }
+
+  Future<void> trackSignUp({required String method}) async {
+    await journify.track("sign_up", properties: {"method": method});
   }
 
   Map<String, dynamic>? _asMap(dynamic value) {

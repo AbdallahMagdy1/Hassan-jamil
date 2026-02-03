@@ -68,9 +68,20 @@ Future<void> main() async {
 
   await GetStorage.init();
 
+  // ByteData data =
+  //     await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
+  // SecurityContext.defaultContext
+  //     .setTrustedCertificatesBytes(data.buffer.asUint8List());
+
   Get.put(ThemeController());
   Get.put(LocaleController());
-
+  // Get.put<JournifyBridgeController>(
+  //   JournifyBridgeController(
+  //     writeKey: "wk_test_38WNzjTQOQoj3KUruAm4QmOB7n1",
+  //     allowedHosts: {"localhost:3000"},
+  //   )..addPlugins(),
+  //   permanent: true,
+  // );
   // Initialize language and theme BEFORE runApp so that the first build
   // observes the correct values (prevents builds that run before
   // InitialBinding-based initialization).
@@ -89,10 +100,6 @@ Future<void> main() async {
   PackageInfo packageInfo = await PackageInfo.fromPlatform();
   String version = packageInfo.version;
 
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.manual,
-    overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
-  );
   // Lock orientation to portrait modes (phone and tablet vertical only)
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,

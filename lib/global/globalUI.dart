@@ -908,29 +908,6 @@ Future<void> getThemeStatus() async {
       Get.changeThemeMode(ThemeMode.light);
     }
   }
-  updateSystemUIOverlays(themeModeValue);
-}
-
-void updateSystemUIOverlays(String themeMode) {
-  if (themeMode == 'dark') {
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        systemNavigationBarColor: darkColor,
-        systemNavigationBarIconBrightness: Brightness.light,
-      ),
-    );
-  } else {
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.dark,
-        systemNavigationBarColor: Colors.white,
-        systemNavigationBarIconBrightness: Brightness.dark,
-      ),
-    );
-  }
 }
 
 void splashLogic() {

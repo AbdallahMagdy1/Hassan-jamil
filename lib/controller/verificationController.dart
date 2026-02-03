@@ -8,9 +8,13 @@ import '../global/globalUI.dart';
 import '../global/globalUrl.dart';
 import '../main.dart';
 import '../model/getUserAccountTypes.dart';
+import '../model/getUserAccountTypes.dart';
 import '../view/screen/mainView.dart';
+import 'journify_controller.dart';
 
 class VerificationControl extends GetxController {
+  final JournifyBridgeController journifyController =
+      Get.find<JournifyBridgeController>();
   RxBool phoneNumberLength = false.obs;
   RxBool isProgress = false.obs;
   RxBool validation = false.obs;
@@ -37,6 +41,8 @@ class VerificationControl extends GetxController {
       isProgress.value = false;
       validation.value = false;
       writeGetStorage(loginKey, data['ApiObjectData'][0]);
+      // Journify - Track Login
+      journifyController.trackLogin(method: 'phone_otp');
       Get.offAll(MainView());
     }
     if (data['ApiObjectData'].isEmpty) {

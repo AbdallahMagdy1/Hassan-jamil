@@ -401,7 +401,6 @@ class _Settings extends State<Settings> {
                               }
                               await clearWebViewCache();
                             }
-                            updateSystemUIOverlays(themeModeValue);
                             Get.find<ThemeController>().updateTheme();
                             Get.back();
                           },

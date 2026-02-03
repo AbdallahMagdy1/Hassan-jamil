@@ -1,5 +1,5 @@
-// const webUrl = "http://localhost:3000/";
-const webUrl = "https://app.hassanjameelapp.com/";
+const webUrl = "http://localhost:3000/";
+// const webUrl = "https://app.hassanjameelapp.com/";
 // const webUrl = "https://fascinating-crumble-7b5594.netlify.app/";
 
 // const baseDomain = "test.hassanjameelapp.com";
