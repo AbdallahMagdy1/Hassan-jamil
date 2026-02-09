@@ -156,7 +156,7 @@ Text widgetText(
   context,
   String text, {
   color,
-  fontSize,
+  double? fontSize,
   fontWeight,
   textDirection,
   textAlign,

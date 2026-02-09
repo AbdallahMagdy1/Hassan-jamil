@@ -14,15 +14,33 @@ class NotificationPage extends StatefulWidget {
 }
 
 class NotificationPageState extends State<NotificationPage> {
+  BoxDecoration _containerDecoration(bool isDark) {
+    return BoxDecoration(
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      borderRadius: BorderRadius.circular(24.0),
+      border: Border.all(color: const Color(0xFFDBDBDB).withOpacity(0.2)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.03),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    bool isDark = themeModeValue == 'dark';
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: Icon(
             Icons.arrow_back_ios_sharp,
-            color: themeModeValue == 'dark' ? Colors.white : darkColor,
+            color: isDark ? Colors.white : darkColor,
+            size: 18,
           ),
         ),
         title: widgetText(
@@ -34,174 +52,145 @@ class NotificationPageState extends State<NotificationPage> {
         elevation: 0,
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          child: FutureBuilder(
-            future: Future.value(notificationData()),
-            builder:
-                (
-                  BuildContext context,
-                  AsyncSnapshot<List<NotificationClass>> snapshot,
-                ) {
-                  if (snapshot.data == null) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.data!.isEmpty) {
-                    return SizedBox(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              widgetText(
-                                context,
-                                'thereAreNoNotifications'.tr,
-                                color: greyDarkColor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  } else {
-                    return widgetListNotification(snapshot.data);
-                  }
-                },
-          ),
+        child: FutureBuilder(
+          future: Future.value(notificationData()),
+          builder:
+              (
+                BuildContext context,
+                AsyncSnapshot<List<NotificationClass>> snapshot,
+              ) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (snapshot.data == null || snapshot.data!.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.notifications_none_rounded,
+                          size: 64,
+                          color: greyColor2.withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 16),
+                        widgetText(
+                          context,
+                          'thereAreNoNotifications'.tr,
+                          color: greyDarkColor,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ],
+                    ),
+                  );
+                } else {
+                  return widgetListNotification(snapshot.data!, isDark);
+                }
+              },
         ),
       ),
     );
   }
 
-  Column widgetListNotification(data) {
+  Widget widgetListNotification(List<NotificationClass> data, bool isDark) {
     DateFormat dateFormat = DateFormat("yyyy-MM-dd HH:mm");
-    return Column(
-      children: [
-        for (int i = 0; i < data.length; i++)
-          Slidable(
-            key: Key(data[i].id.toString()),
-            endActionPane: ActionPane(
-              // A motion is a widget used to control how the pane animates.
-              motion: const ScrollMotion(),
 
-              // All actions are defined in the children parameter.
-              children: [
-                // A SlidableAction can have an icon and/or a label.
-                SlidableAction(
-                  onPressed: (BuildContext context) async {
-                    notificationDelete(i);
-                    setState(() {});
-                  },
-                  backgroundColor: const Color(0xFFFE4A49),
-                  foregroundColor: Colors.white,
-                  icon: Icons.delete,
-                  label: 'Delete',
-                ),
-              ],
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  margin: EdgeInsets.only(top: Get.height * .02),
-                  width: Get.width * .9,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(5),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Colors.grey,
-                        blurRadius: 11,
-                        spreadRadius: -8,
-                      ),
-                    ],
-                  ),
-                  child: Padding(
-                    padding: EdgeInsets.only(top: Get.width * .06),
-                    child: Column(
-                      children: [
-                        Row(
+    return ListView.separated(
+      padding: EdgeInsets.symmetric(horizontal: Get.width * .05, vertical: 20),
+      itemCount: data.length,
+      separatorBuilder: (context, index) => const SizedBox(height: 16),
+      itemBuilder: (context, i) {
+        return Slidable(
+          key: Key(data[i].id.toString()),
+          endActionPane: ActionPane(
+            extentRatio: 0.25,
+            motion: const ScrollMotion(),
+            children: [
+              CustomSlidableAction(
+                onPressed: (BuildContext context) async {
+                  notificationDelete(i);
+                  setState(() {});
+                },
+                backgroundColor: const Color(0xFFFE4A49),
+                foregroundColor: Colors.white,
+                borderRadius: BorderRadius.circular(24),
+                child: const Icon(Icons.delete_outline_rounded),
+              ),
+            ],
+          ),
+          child: Container(
+            decoration: _containerDecoration(isDark),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(24),
+              child: IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // The "Status" side bar
+                    Container(width: 6, color: greenColor),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              color: greenColor,
-                              height: Get.height * .025,
-                              width: Get.width * .015,
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: widgetText(
+                                    context,
+                                    language == "en"
+                                        ? data[i].titleEn
+                                        : data[i].titleAr,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 15.0,
+                                  ),
+                                ),
+                                Icon(
+                                  Icons.notifications_active_outlined,
+                                  size: 16,
+                                  color: greenColor,
+                                ),
+                              ],
                             ),
-                            SizedBox(width: Get.width * .025),
-                            navwidgetText(
+                            const SizedBox(height: 8),
+                            widgetText(
                               context,
                               language == "en"
-                                  ? data[i].titleEn
-                                  : data[i].titleAr,
-                              fontWeight: FontWeight.bold,
-                              fontSize: Get.width * .035,
+                                  ? data[i].bodyEn
+                                  : data[i].bodyAr,
+                              fontSize: 13.0,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  size: 12,
+                                  color: greyColor2,
+                                ),
+                                const SizedBox(width: 4),
+                                widgetText(
+                                  context,
+                                  dateFormat.format(
+                                    DateTime.parse(data[i].date),
+                                  ),
+                                  color: greyColor2,
+                                  fontSize: 11.0,
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                            left: Get.width * .04,
-                            right: Get.width * .04,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              SizedBox(height: Get.width * .02),
-                              widgetText(
-                                context,
-                                language == "en"
-                                    ? data[i].bodyEn
-                                    : data[i].bodyAr,
-                                fontSize: Get.width * .030,
-                              ),
-                              SizedBox(height: Get.width * .02),
-                              Row(
-                                children: [
-                                  widgetText(
-                                    context,
-                                    dateFormat.format(
-                                      DateTime.parse(data[i].date),
-                                    ),
-                                    color: greyColor2,
-                                    fontSize: Get.width * .030,
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: Get.width * .02),
-                            ],
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
-      ],
-    );
-  }
-
-  Row navwidgetText(
-    context,
-    String text, {
-    color,
-    fontSize,
-    fontWeight,
-    textDirection,
-  }) {
-    return Row(
-      children: [
-        Text(
-          text,
-          style: TextStyle(
-            color: color,
-            fontSize: fontSize ?? Get.width * .05,
-            fontWeight: fontWeight ?? FontWeight.normal,
-          ),
-          textDirection: textDirection,
-        ),
-      ],
+        );
+      },
     );
   }
 }

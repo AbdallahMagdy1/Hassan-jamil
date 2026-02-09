@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:get/get.dart';
 import 'package:hj_app/global/enumMethod.dart';
 import 'package:http/http.dart' as http;
 import 'globalUI.dart';
@@ -27,126 +25,114 @@ Future myRequest({
     'password-authentication': '${isLogin != null ? passWord : ""}',
   };
 
-  var connectivityResult = await (Connectivity().checkConnectivity());
-  if (connectivityResult.contains(ConnectivityResult.mobile) ||
-      connectivityResult.contains(ConnectivityResult.wifi) ||
-      connectivityResult.contains(ConnectivityResult.ethernet) ||
-      connectivityResult.contains(ConnectivityResult.vpn) ||
-      connectivityResult.contains(ConnectivityResult.other)) {
-    if (method == HttpMethod.post) {
-      var result = await http.post(
-        requestUri,
-        body: requestBody,
-        headers: headers ?? requestHeader,
-      );
-      var convertedData = jsonDecode(jsonEncode(result.headers));
+  if (method == HttpMethod.post) {
+    var result = await http.post(
+      requestUri,
+      body: requestBody,
+      headers: headers ?? requestHeader,
+    );
+    var convertedData = jsonDecode(jsonEncode(result.headers));
 
-      if (result.statusCode == 200) {
-        if (returnHeader) {
-          return [true, convertedData['set-cookie']];
-        }
+    if (result.statusCode == 200) {
+      if (returnHeader) {
+        return [true, convertedData['set-cookie']];
+      }
 
-        var data = jsonDecode(result.body.toString().replaceAll('+966', ''));
-        return data;
-      } else if (result.statusCode == 401) {
-        var data = jsonDecode(result.body);
-        if (returnStatusCode) {
-          return result.statusCode;
-        } else if (errorLogin) {
-          errorDialog(
-            title: "Error",
-            body: data['enDescription'],
-            isFindLoading: true,
-          );
-        } else {
-          errorDialog(title: "Error", body: data['EnDescription']);
-        }
-      } else if (result.statusCode == 400) {
-        if (returnHeader) {
-          return [false, jsonDecode(result.body)];
-        }
-        var data = jsonDecode(result.body);
-        return data;
-      } else if (result.statusCode == 201) {
+      var data = jsonDecode(result.body.toString().replaceAll('+966', ''));
+      return data;
+    } else if (result.statusCode == 401) {
+      var data = jsonDecode(result.body);
+      if (returnStatusCode) {
         return result.statusCode;
+      } else if (errorLogin) {
+        errorDialog(
+          title: "Error",
+          body: data['enDescription'],
+          isFindLoading: true,
+        );
+      } else {
+        errorDialog(title: "Error", body: data['EnDescription']);
       }
-    } else if (method == HttpMethod.put) {
-      var result = await http.put(
-        requestUri,
-        body: requestBody,
-        headers: headers ?? requestHeader,
-      );
-      var convertedData = jsonDecode(jsonEncode(result.headers));
-      if (result.statusCode == 200) {
-        if (returnHeader) {
-          return [true, convertedData['set-cookie']];
-        }
-        if (url == update) {
-          return {'MessageNo': '202100000000008'};
-        }
-        var data = jsonDecode(result.body);
-        return data;
-      } else if (result.statusCode == 401) {
-        var data = jsonDecode(result.body);
-        if (returnStatusCode) {
-          return result.statusCode;
-        } else if (errorLogin) {
-          errorDialog(
-            title: "Error",
-            body: data['enDescription'],
-            isFindLoading: true,
-          );
-        } else {
-          errorDialog(title: "Error", body: data['EnDescription']);
-        }
-      } else if (result.statusCode == 400) {
-        if (returnHeader) {
-          return [false, jsonDecode(result.body)];
-        }
-        var data = jsonDecode(result.body);
-        return data;
-      } else if (result.statusCode == 201) {
+    } else if (result.statusCode == 400) {
+      if (returnHeader) {
+        return [false, jsonDecode(result.body)];
+      }
+      var data = jsonDecode(result.body);
+      return data;
+    } else if (result.statusCode == 201) {
+      return result.statusCode;
+    }
+  } else if (method == HttpMethod.put) {
+    var result = await http.put(
+      requestUri,
+      body: requestBody,
+      headers: headers ?? requestHeader,
+    );
+    var convertedData = jsonDecode(jsonEncode(result.headers));
+    if (result.statusCode == 200) {
+      if (returnHeader) {
+        return [true, convertedData['set-cookie']];
+      }
+      if (url == update) {
+        return {'MessageNo': '202100000000008'};
+      }
+      var data = jsonDecode(result.body);
+      return data;
+    } else if (result.statusCode == 401) {
+      var data = jsonDecode(result.body);
+      if (returnStatusCode) {
         return result.statusCode;
+      } else if (errorLogin) {
+        errorDialog(
+          title: "Error",
+          body: data['enDescription'],
+          isFindLoading: true,
+        );
+      } else {
+        errorDialog(title: "Error", body: data['EnDescription']);
       }
-    } else if (method == HttpMethod.get) {
-      var result = await http.get(
-        requestUri,
-        headers: headers ?? requestHeader,
-      );
-      var convertedData = jsonDecode(jsonEncode(result.headers));
+    } else if (result.statusCode == 400) {
+      if (returnHeader) {
+        return [false, jsonDecode(result.body)];
+      }
+      var data = jsonDecode(result.body);
+      return data;
+    } else if (result.statusCode == 201) {
+      return result.statusCode;
+    }
+  } else if (method == HttpMethod.get) {
+    var result = await http.get(requestUri, headers: headers ?? requestHeader);
+    var convertedData = jsonDecode(jsonEncode(result.headers));
 
-      if (result.statusCode == 200) {
-        if (returnHeader) {
-          return [true, convertedData['set-cookie']];
-        }
-        var data = jsonDecode(result.body);
-        return data;
-      } else if (result.statusCode == 401) {
-        var data = jsonDecode(result.body);
-        if (returnStatusCode) {
-          return result.statusCode;
-        } else if (errorLogin) {
-          errorDialog(
-            title: "Error",
-            body: data['enDescription'],
-            isFindLoading: true,
-          );
-        } else {
-          errorDialog(title: "Error", body: data['EnDescription']);
-        }
-      } else if (result.statusCode == 400) {
-        if (returnHeader) {
-          return [false, jsonDecode(result.body)];
-        }
-        var data = jsonDecode(result.body);
-        return data;
-      } else if (result.statusCode == 201) {
-        return result.statusCode;
+    if (result.statusCode == 200) {
+      if (returnHeader) {
+        return [true, convertedData['set-cookie']];
       }
+      var data = jsonDecode(result.body);
+      return data;
+    } else if (result.statusCode == 401) {
+      var data = jsonDecode(result.body);
+      if (returnStatusCode) {
+        return result.statusCode;
+      } else if (errorLogin) {
+        errorDialog(
+          title: "Error",
+          body: data['enDescription'],
+          isFindLoading: true,
+        );
+      } else {
+        errorDialog(title: "Error", body: data['EnDescription']);
+      }
+    } else if (result.statusCode == 400) {
+      if (returnHeader) {
+        return [false, jsonDecode(result.body)];
+      }
+      var data = jsonDecode(result.body);
+      return data;
+    } else if (result.statusCode == 201) {
+      return result.statusCode;
     }
   }
-
-  errorDialog(title: 'NO_INTERNET'.tr, body: 'CHECK_INTERNET'.tr);
 
   return false;
 }

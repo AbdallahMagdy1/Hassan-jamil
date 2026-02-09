@@ -29,6 +29,9 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 String? fcmToken;
 
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  print("Background Message notification: ${message.notification}");
+  print("Background Message notification: ${message.notification?.body}");
+
   notificationAdd(
     NotificationClass(
       id: null,

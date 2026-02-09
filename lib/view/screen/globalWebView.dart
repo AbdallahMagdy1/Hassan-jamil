@@ -1,10 +1,9 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:hj_app/controller/journify_controller.dart';
+import 'dart:async'; // Add Timer import
 import 'package:hj_app/global/globalUrl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -35,9 +34,25 @@ class _GlobalWebViewState extends State<GlobalWebView> {
   String? _lastNavigationBase;
   int _sameNavigationCount = 0;
   final int _sameNavigationThreshold = 9;
+  // Fallback timer to ensure WebView is shown if appReady signal is missed
+  // ignore: unused_field
+  Timer? _fallbackTimer;
+
+  void _showWebView() {
+    if (mounted && (isLoading || !isWebViewVisible)) {
+      debugPrint("Showing WebView via signal or fallback");
+      _fallbackTimer?.cancel();
+      setState(() {
+        isLoading = false;
+        isWebViewVisible = true;
+      });
+    }
+  }
 
   void initStateAsync() async {
-    showErrorPage = ((await checkConnection()) == true) ? 0 : 1;
+    // Don't check connection upfront to avoid false positives.
+    // Let the WebView try to load and fail if there's no internet.
+    showErrorPage = 0;
     setState(() {});
   }
 
@@ -52,19 +67,6 @@ class _GlobalWebViewState extends State<GlobalWebView> {
   void dispose() {
     _webViewController?.dispose();
     super.dispose();
-  }
-
-  Future<bool> checkConnection() async {
-    var connectivityResult = await (Connectivity().checkConnectivity());
-    if (connectivityResult.contains(ConnectivityResult.mobile) ||
-        connectivityResult.contains(ConnectivityResult.wifi) ||
-        connectivityResult.contains(ConnectivityResult.ethernet) ||
-        connectivityResult.contains(ConnectivityResult.vpn) ||
-        connectivityResult.contains(ConnectivityResult.other)) {
-      return true;
-    }
-
-    return false;
   }
 
   @override
@@ -85,7 +87,7 @@ class _GlobalWebViewState extends State<GlobalWebView> {
                     maintainState: true,
                     child: InAppWebView(
                       key: ValueKey(
-                        '$language-$themeModeValue-$isWebViewReady-${settingsVersion.value}',
+                        '$language-$themeModeValue-${settingsVersion.value}',
                       ),
                       initialSettings: InAppWebViewSettings(
                         useShouldOverrideUrlLoading: true,
@@ -133,11 +135,9 @@ class _GlobalWebViewState extends State<GlobalWebView> {
                         }
                       },
                       // The onLoadStart callback is triggered when the page starts loading.
-                      onLoadStart: (controller, url) {
+                      onLoadStart: (controller, url) async {
                         if (mounted) {
                           setState(() {
-                            // Prevent splash from showing on every internal navigation
-                            // isLoading = true;
                             isWebViewReady = true;
                           });
                         }
@@ -147,15 +147,36 @@ class _GlobalWebViewState extends State<GlobalWebView> {
                         if (mounted) {
                           // Add a small delay to ensure the page is fully painted/rendered
                           await Future.delayed(
-                            const Duration(milliseconds: 800),
+                            const Duration(milliseconds: 600),
                           );
                           if (mounted) {
-                            setState(() {
-                              // Set isLoading to false to hide the loading indicator.
-                              isLoading = false;
-                              isWebViewVisible =
-                                  true; // Show WebView when loaded
-                            });
+                            // Start fallback timer when page finishes loading
+                            // If React app is healthy, it should send appReady 'soon'
+                            // changing from 800ms delay to waiting for signal with 10s fallback
+                            _fallbackTimer?.cancel();
+
+                            // Dynamic fallback duration based on page type
+                            // Default is 60ms (very fast) if we trust the page to render quickly
+                            // Or longer if we want to wait for the signal
+                            int fallbackDuration = 4000;
+
+                            if (widget.url.contains('/news')) {
+                              fallbackDuration = 60;
+                            } else if (widget.url.contains('/home')) {
+                              fallbackDuration = 2000;
+                            } else if (widget.url.contains('/cart')) {
+                              fallbackDuration = 1000;
+                            }
+
+                            _fallbackTimer = Timer(
+                              Duration(milliseconds: fallbackDuration),
+                              () {
+                                debugPrint(
+                                  "Fallback timer triggered - showing WebView",
+                                );
+                                _showWebView();
+                              },
+                            );
                           }
                         }
                       },
@@ -167,6 +188,16 @@ class _GlobalWebViewState extends State<GlobalWebView> {
                           },
                       onWebViewCreated: (InAppWebViewController controller) {
                         _webViewController = controller;
+
+                        // Handler for React App Ready Signal
+                        controller.addJavaScriptHandler(
+                          handlerName: 'appReady',
+                          callback: (args) {
+                            debugPrint("Received appReady signal from React");
+                            _showWebView();
+                          },
+                        );
+
                         // Make the WebView visible as soon as it's created so we
                         // don't show a permanent white overlay if the page takes
                         // long or never fires onLoadStop on some iOS redirects.
@@ -198,7 +229,7 @@ class _GlobalWebViewState extends State<GlobalWebView> {
                         if (Platform.isIOS && mounted) {
                           setState(() {
                             isWebViewReady = true;
-                            isWebViewVisible = true;
+                            // isWebViewVisible = true; // Wait for appReady on iOS too
                           });
                         }
                       },
@@ -232,16 +263,9 @@ class _GlobalWebViewState extends State<GlobalWebView> {
                         // progress is 0..100
                         if (mounted) {
                           if (progress >= 100) {
-                            // Add a small delay to ensure rendering catches up with "loaded" state
-                            await Future.delayed(
-                              const Duration(milliseconds: 800),
-                            );
-                            if (mounted) {
-                              setState(() {
-                                isLoading = false;
-                                isWebViewVisible = true;
-                              });
-                            }
+                            // Do nothing here, wait for onLoadStop -> fallback or appReady signal
+                            // We don't want to show it just because progress is 100%
+                            // We wait for the specific component ready signal
                           }
                         }
                       },
@@ -424,10 +448,13 @@ class _GlobalWebViewState extends State<GlobalWebView> {
                               return;
                             }
                             // Show a static error page to avoid a white/blank screen.
+                            // Also catch standard connection errors
+
                             if (request.url.toString().contains(backendUrl)) {
                               if (mounted) {
                                 setState(() {
-                                  showErrorPage = 2;
+                                  showErrorPage =
+                                      1; // Treat mostly as connection issues for now or 2
                                 });
                               }
                             }
@@ -578,20 +605,10 @@ class _GlobalWebViewState extends State<GlobalWebView> {
               children: [
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: Get.width * .2),
-                  child: Image.asset(
-                    showErrorPage == 1
-                        ? pngNoInternetConnection
-                        : pngErrorBottomSheet,
-                  ),
+                  child: Image.asset(pngErrorBottomSheet),
                 ),
                 SizedBox(height: Get.height * .02),
-                widgetText(
-                  context,
-                  (showErrorPage == 1
-                          ? 'noInternetConnection'
-                          : 'anUnexpectedErrorOccurred')
-                      .tr,
-                ),
+                widgetText(context, 'anUnexpectedErrorOccurred'.tr),
               ],
             ),
           );

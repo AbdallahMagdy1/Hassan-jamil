@@ -24,8 +24,10 @@ class _LoginUserName2State extends State<LoginUserName> {
 
   @override
   void initState() {
-    controller.isProgress.value = false;
-    controller.isProgressCreateAccount.value = false;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      controller.isProgress.value = false;
+      controller.isProgressCreateAccount.value = false;
+    });
     super.initState();
   }
 

@@ -7,850 +7,798 @@ import 'package:image_picker/image_picker.dart';
 import '../../controller/profileController.dart';
 import '../../global/globalUI.dart';
 
-class profileDetails extends StatefulWidget {
+class profileDetails extends StatelessWidget {
   const profileDetails({super.key});
 
   @override
-  State<StatefulWidget> createState() => _profileDetailsState();
-}
-
-class _profileDetailsState extends State<profileDetails> {
-  var controller = Get.put(ProfileController());
-  var isLogin = readGetStorage(loginKey);
-
-  @override
-  void initState() {
-    super.initState();
-
-    controller.controllerPhoneNumber.text = isLogin['Phone'] ?? '';
-  }
-
-  bool validateUserAccountType = false;
-  bool validateTheCommercialRegistrationNo = false;
-  bool validateIdentificationNumber = false;
-  var passwordAfterMd5;
-
-  @override
   Widget build(BuildContext context) {
+    final controller = Get.put(ProfileController());
+    final isLogin = readGetStorage(loginKey);
+    bool isDark = themeModeValue == 'dark';
+
+    // Handle null or missing user data
+    if (isLogin == null) {
+      return Scaffold(
+        appBar: AppBar(
+          leading: IconButton(
+            onPressed: () => Get.back(),
+            icon: Icon(
+              Icons.arrow_back_ios_sharp,
+              color: isDark ? Colors.white : darkColor,
+              size: 18,
+            ),
+          ),
+          title: widgetText(
+            context,
+            'profilePersonally'.tr,
+            fontWeight: FontWeight.bold,
+          ),
+          centerTitle: true,
+          elevation: 0,
+        ),
+        body: Center(
+          child: widgetText(
+            context,
+            'pleaseSignInViewProfile'.tr,
+            fontSize: 16,
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: Icon(
             Icons.arrow_back_ios_sharp,
-            color: themeModeValue == 'dark' ? Colors.white : darkColor,
+            color: isDark ? Colors.white : darkColor,
+            size: 18,
           ),
         ),
         title: widgetText(
           context,
           'profilePersonally'.tr,
-          color: themeModeValue == 'light' ? darkColor : Colors.white,
           fontWeight: FontWeight.bold,
         ),
         centerTitle: true,
         elevation: 0,
       ),
       body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            // Use the available width to choose responsive sizes for tablets/iPad
-            final contentWidth = constraints.maxWidth;
-            final isLarge = contentWidth >= 700;
-            final horizontalPadding = contentWidth * 0.05;
-            final avatarSize = isLarge ? 160.0 : contentWidth * 0.2;
-
-            return Container(
-              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-              child: SingleChildScrollView(
-                child: Column(
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: Get.width * .05,
+            vertical: 20,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // SECTION: PROFILE HEADER CARD
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: _containerDecoration(isDark, context),
+                child: Row(
                   children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        color: themeModeValue == 'light'
-                            ? Colors.white
-                            : buttonDarkColor,
-                        border: Border(
-                          bottom: BorderSide(
-                            width: Get.width * .005,
-                            color: const Color(
-                              0xffE1E6E2,
-                            ).withAlpha((255 * .30).toInt()),
-                          ),
-                        ),
-                        boxShadow: [
-                          themeModeValue == 'light'
-                              ? const BoxShadow(
-                                  color: Colors.grey,
-                                  blurRadius: 15,
-                                  spreadRadius: -10,
-                                )
-                              : const BoxShadow(color: Colors.transparent),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Padding(
-                            padding: EdgeInsets.symmetric(
-                              vertical: Get.height * .02,
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  flex: 3,
-                                  child: InkWell(
-                                    onTap: () {
-                                      // Get.to(profileDetails());
-                                      showDialogUploadImageFromGalleryOrCameraForLogo();
-                                    },
-                                    child: Column(
-                                      children: [
-                                        controller.imageProfileBase64 != null
-                                            ? Container(
-                                                width: avatarSize,
-                                                height: avatarSize,
-                                                decoration: BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  image: DecorationImage(
-                                                    fit: BoxFit.fill,
-                                                    image: MemoryImage(
-                                                      base64.decode(
-                                                        controller
-                                                            .imageProfileBase64,
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              )
-                                            : Container(
-                                                width: avatarSize,
-                                                height: avatarSize,
-                                                decoration: const BoxDecoration(
-                                                  shape: BoxShape.circle,
-                                                  image: DecorationImage(
-                                                    fit: BoxFit.fill,
-                                                    image: AssetImage(
-                                                      pngCharacter,
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  flex: 7,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      language == "ar"
-                                          ? Row(
-                                              children: [
-                                                widgetText(
-                                                  context,
-                                                  isLogin['FirstNameAr'] ??
-                                                      isLogin['FirstNameEn'],
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                widgetText(
-                                                  context,
-                                                  (isLogin['LastNameAr'] ??
-                                                      isLogin['LastNameEn'] ??
-                                                      ''),
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ],
-                                            )
-                                          : Row(
-                                              children: [
-                                                widgetText(
-                                                  context,
-                                                  isLogin['FirstNameEn'] ??
-                                                      isLogin['FirstNameAr'],
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                                widgetText(
-                                                  context,
-                                                  (isLogin['LastNameEn'] ??
-                                                      isLogin['LastNameAr'] ??
-                                                      ''),
-                                                  fontWeight: FontWeight.bold,
-                                                ),
-                                              ],
-                                            ),
-                                      SizedBox(height: avatarSize * 0.12),
-                                      widgetText(
-                                        context,
-                                        controller.listUserAccountTypes
-                                                .where(
-                                                  (element) =>
-                                                      element.id ==
-                                                      isLogin['CustGroupID'],
-                                                )
-                                                .toList()
-                                                .isNotEmpty
-                                            ? (language == 'ar'
-                                                  ? controller
-                                                        .listUserAccountTypes
-                                                        .where(
-                                                          (element) =>
-                                                              element.id ==
-                                                              isLogin['CustGroupID'],
-                                                        )
-                                                        .toList()[0]
-                                                        .descriptionAr
-                                                  : controller
-                                                        .listUserAccountTypes
-                                                        .where(
-                                                          (element) =>
-                                                              element.id ==
-                                                              isLogin['CustGroupID'],
-                                                        )
-                                                        .toList()[0]
-                                                        .descriptionEn)
-                                            : 'clientType'.tr,
-                                        fontSize: contentWidth * 0.035,
-                                      ),
-                                      SizedBox(height: contentWidth * 0.01),
-                                      widgetText(
-                                        context,
-                                        isLogin['Address'] ?? '',
-                                        fontSize: contentWidth * .028,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Obx(
-                      () => SizedBox(
-                        // adaptive height for tabs
-                        height: isLarge ? Get.height * 0.12 : Get.height * 0.1,
-                        child: SingleChildScrollView(
-                          scrollDirection: Axis.horizontal,
-                          child: Row(
-                            children: [
-                              InkWell(
-                                child: _widgetTab(
-                                  'profilePersonally',
-                                  0,
-                                  activeColor:
-                                      controller.optionTap.value == 0 ||
-                                          controller.optionTap.value == 3
-                                      ? true
-                                      : false,
-                                ),
-                                onTap: () {
-                                  userAccountTypesValue = null;
-                                },
-                              ),
-                              SizedBox(width: contentWidth * .03),
-                              _widgetTab(
-                                'contactInformation',
-                                1,
-                                activeColor:
-                                    controller.optionTap.value == 1 ||
-                                        controller.optionTap.value == 4
-                                    ? true
-                                    : false,
-                              ),
-                              SizedBox(width: contentWidth * .03),
-                              _widgetTab(
-                                'confidentialityAndSecurity',
-                                2,
-                                activeColor:
-                                    controller.optionTap.value == 2 ||
-                                        controller.optionTap.value == 5
-                                    ? true
-                                    : false,
-                              ),
-                              SizedBox(width: contentWidth * .03),
-                              _widgetTab(
-                                'deleteAnAccount',
-                                -1,
-                                activeColor: controller.optionTap.value == -1
-                                    ? true
-                                    : false,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    Obx(
-                      () => Visibility(
-                        visible: controller.optionTap.value == 0,
-                        child: Column(
-                          children: [
-                            widgetTextForm(
-                              context,
-                              initialValue: language == "ar"
-                                  ? isLogin['FirstNameAr']
-                                  : isLogin['FirstNameEn'],
-                              readOnly: true,
-                              hintText: 'firstName'.tr,
-                            ),
-                            widgetTextForm(
-                              context,
-                              initialValue: language == "ar"
-                                  ? isLogin['MiddleNameAr']
-                                  : isLogin['MiddleNameEn'],
-                              readOnly: true,
-                              hintText: 'middleName'.tr,
-                            ),
-                            widgetTextForm(
-                              context,
-                              initialValue: language == "ar"
-                                  ? isLogin['LastNameAr']
-                                  : isLogin['LastNameEn'],
-                              readOnly: true,
-                              hintText: 'lastName'.tr,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                RadioGroup(
-                                  onChanged: (value) {},
-                                  groupValue: controller.idGender.value,
-                                  child: Radio(
-                                    value: 1,
-                                    activeColor: greenColor,
-                                  ),
-                                ),
-                                widgetText(
-                                  context,
-                                  'male'.tr,
-                                  fontSize: Get.width * .035,
-                                ),
-                                RadioGroup(
-                                  groupValue: controller.idGender.value,
-                                  onChanged: (value) {},
-                                  child: Radio(
-                                    value: 2,
-                                    activeColor: greenColor,
-                                  ),
-                                ),
-                                widgetText(
-                                  context,
-                                  'female'.tr,
-                                  fontSize: Get.width * .035,
-                                ),
-                              ],
-                            ),
-                            widgetTextForm(
-                              context,
-                              initialValue: isLogin['Address'] ?? '',
-                              readOnly: true,
-                              hintText: 'theAddress'.tr,
-                            ),
-                            widgetTextForm(
-                              context,
-                              initialValue: isLogin['IdentityNumber'] ?? '',
-                              readOnly: true,
-                              hintText: 'identityData'.tr,
-                            ),
-                            widgetDropdownGetUserAccountTypes(
-                              context,
-                              controller.listUserAccountTypes,
-                              language,
-                              hint:
-                                  controller.listUserAccountTypes
-                                      .where(
-                                        (element) =>
-                                            element.id ==
-                                            isLogin['CustGroupID'],
-                                      )
-                                      .toList()
-                                      .isNotEmpty
-                                  ? (language == 'ar'
-                                        ? controller.listUserAccountTypes
-                                              .where(
-                                                (element) =>
-                                                    element.id ==
-                                                    isLogin['CustGroupID'],
-                                              )
-                                              .toList()[0]
-                                              .descriptionAr
-                                        : controller.listUserAccountTypes
-                                              .where(
-                                                (element) =>
-                                                    element.id ==
-                                                    isLogin['CustGroupID'],
-                                              )
-                                              .toList()[0]
-                                              .descriptionEn)
-                                  : 'userAccountType'.tr,
-                              errorColor: validateUserAccountType,
-                            ),
-                            SizedBox(height: Get.height * .015),
-                            widgetButton(
-                              context,
-                              'edit'.tr,
-                              colorText: Colors.white,
-                              colorButton: greenColor,
-                              fontSize: contentWidth * .035,
-                              fontWeight: FontWeight.bold,
-                              width: contentWidth * .9,
-                              onTap: () {
-                                controller.optionTap.value = 3;
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Obx(
-                      () => Visibility(
-                        visible: controller.optionTap.value == 3,
-                        child: Column(
-                          children: [
-                            widgetTextForm(
-                              context,
-                              controller: controller.controllerFistName,
-                              errorText: controller.validateFirstName.value
-                                  ? ('firstNameIsRequired'.tr)
-                                  : null,
-                              onChanged: (v) {
-                                if (v.toString().isEmpty) {
-                                  controller.validateFirstName.value = true;
-                                } else {
-                                  controller.validateFirstName.value = false;
-                                }
-                                setState(() {});
-                              },
-                              hintText: 'firstName'.tr,
-                            ),
-                            widgetTextForm(
-                              context,
-                              controller: controller.controllerMiddleName,
-                              errorText: controller.validateMiddleName.value
-                                  ? ('theSecondNameIsRequired'.tr)
-                                  : null,
-                              onChanged: (v) {
-                                if (v.toString().isEmpty) {
-                                  controller.validateMiddleName.value = true;
-                                } else {
-                                  controller.validateMiddleName.value = false;
-                                }
-                                setState(() {});
-                              },
-                              hintText: 'middleName'.tr,
-                            ),
-                            widgetTextForm(
-                              context,
-                              controller: controller.controllerLastName,
-                              errorText: controller.validateLastName.value
-                                  ? ('lastNameIsRequired'.tr)
-                                  : null,
-                              onChanged: (v) {
-                                if (v.toString().isEmpty) {
-                                  controller.validateLastName.value = true;
-                                } else {
-                                  controller.validateLastName.value = false;
-                                }
-                              },
-                              hintText: 'lastName'.tr,
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: <Widget>[
-                                RadioGroup(
-                                  onChanged: (value) {},
-                                  groupValue: controller.idGender.value,
-                                  child: Radio(
-                                    value: 1,
-                                    activeColor: greenColor,
-                                  ),
-                                ),
-                                widgetText(
-                                  context,
-                                  'male'.tr,
-                                  fontSize: Get.width * .035,
-                                ),
-                                RadioGroup(
-                                  onChanged: (value) {},
-                                  groupValue: controller.idGender.value,
-                                  child: Radio(
-                                    value: 2,
-                                    activeColor: greenColor,
-                                  ),
-                                ),
-                                widgetText(
-                                  context,
-                                  'female'.tr,
-                                  fontSize: Get.width * .035,
-                                ),
-                              ],
-                            ),
-                            widgetTextForm(
-                              context,
-                              controller: controller.controllerAddress,
-                              errorText: controller.validateTheAddress.value
-                                  ? ('addressIsRequired'.tr)
-                                  : null,
-                              onChanged: (v) {
-                                if (v.toString().isEmpty) {
-                                  controller.validateTheAddress.value = true;
-                                } else {
-                                  controller.validateTheAddress.value = false;
-                                }
-                              },
-                              hintText: 'theAddress'.tr,
-                            ),
-                            widgetTextForm(
-                              context,
-                              controller: controller.controllerIdentityNumber,
-                              hintText: 'identityData'.tr,
-                              errorText: controller.validateIDNumber.value
-                                  ? ('identityDataIsRequired'.tr)
-                                  : null,
-                              onChanged: (v) {
-                                if (v.toString().isEmpty) {
-                                  controller.validateIDNumber.value = true;
-                                } else {
-                                  controller.validateIDNumber.value = false;
-                                }
-                              },
-                            ),
-                            widgetDropdownGetUserAccountTypes(
-                              context,
-                              controller.listUserAccountTypes,
-                              language,
-                              hint:
-                                  controller.listUserAccountTypes
-                                      .where(
-                                        (element) =>
-                                            element.id ==
-                                            isLogin['CustGroupID'],
-                                      )
-                                      .toList()
-                                      .isNotEmpty
-                                  ? (language == 'ar'
-                                        ? controller.listUserAccountTypes
-                                              .where(
-                                                (element) =>
-                                                    element.id ==
-                                                    isLogin['CustGroupID'],
-                                              )
-                                              .toList()[0]
-                                              .descriptionAr
-                                        : controller.listUserAccountTypes
-                                              .where(
-                                                (element) =>
-                                                    element.id ==
-                                                    isLogin['CustGroupID'],
-                                              )
-                                              .toList()[0]
-                                              .descriptionEn)
-                                  : 'userAccountType'.tr,
-                              onChanged: (value) {
-                                validateUserAccountType = false;
-                                controller.userAccountTypesTheChosen =
-                                    controller.listUserAccountTypes
-                                        .where((element) => element.id == value)
-                                        .toList();
-                                userAccountTypesValue = value.toString();
-                                validateUserAccountType = false;
-                                validateTheCommercialRegistrationNo = false;
-                                validateIdentificationNumber = false;
-                                setState(() {});
-                              },
-                              errorColor: validateUserAccountType,
-                            ),
-                            SizedBox(height: Get.height * .015),
-                            widgetButton(
-                              context,
-                              'save'.tr,
-                              colorText: Colors.white,
-                              colorButton: greenColor,
-                              fontSize: Get.width * .035,
-                              fontWeight: FontWeight.bold,
-                              width: Get.width * .9,
-                              isProgress: controller.isProgress.value,
-                              onTap: () {
-                                if (controller
-                                    .controllerFistName
-                                    .text
-                                    .isEmpty) {
-                                  controller.validateFirstName.value = true;
-                                  setState(() {});
-                                }
-                                if (controller
-                                    .controllerLastName
-                                    .text
-                                    .isEmpty) {
-                                  controller.validateLastName.value = true;
-                                  setState(() {});
-                                } else if (controller
-                                    .controllerAddress
-                                    .text
-                                    .isEmpty) {
-                                  controller.validateTheAddress.value = true;
-                                  setState(() {});
-                                } else if (controller
-                                    .controllerIdentityNumber
-                                    .text
-                                    .isEmpty) {
-                                  controller.validateIDNumber.value = true;
-                                  setState(() {});
-                                } else {
-                                  controller.updateProfilePersonally();
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Obx(
-                      () => Visibility(
-                        visible: controller.optionTap.value == 1,
-                        child: Column(
-                          children: [
-                            widgetPhoneNumber(context),
-                            widgetTextForm(
-                              context,
-                              readOnly: true,
-                              initialValue: isLogin['Email'] ?? '',
-                              textDirection: TextDirection.ltr,
-                              hintText: 'email'.tr,
-                            ),
-                            widgetButton(
-                              context,
-                              'edit'.tr,
-                              colorText: Colors.white,
-                              colorButton: greenColor,
-                              fontSize: Get.width * .035,
-                              fontWeight: FontWeight.bold,
-                              width: Get.width * .9,
-                              onTap: () {
-                                controller.optionTap.value = 4;
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Obx(
-                      () => Visibility(
-                        visible: controller.optionTap.value == 4,
-                        child: Column(
-                          children: [
-                            widgetPhoneNumber(context, isEnabled: true),
-                            widgetTextForm(
-                              context,
-                              controller: controller.controllerEmail,
-                              textDirection: TextDirection.ltr,
-                              hintText: 'email'.tr,
-                            ),
-                            widgetButton(
-                              context,
-                              'save'.tr,
-                              colorText: Colors.white,
-                              colorButton:
-                                  controller.validatePhoneNumber.value ==
-                                          true &&
-                                      controller.controllerEmail.text
-                                          .toString()
-                                          .isEmail
-                                  ? greenColor
-                                  : null,
-                              fontSize: Get.width * .035,
-                              fontWeight: FontWeight.bold,
-                              width: Get.width * .9,
-                              isProgress: controller.isProgress.value,
-                              onTap: () {
-                                if (controller.validatePhoneNumber.value ==
-                                        true &&
-                                    controller.controllerEmail.text
-                                        .toString()
-                                        .isEmail) {
-                                  controller.updatePasswordContactInformation();
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Obx(
-                      () => Visibility(
-                        visible: controller.optionTap.value == 2,
-                        child: Column(
-                          children: [
-                            widgetTextForm(
-                              context,
-                              initialValue: isLogin['Password'],
-                              obscureText: true,
-                              readOnly: true,
-                              hintText: 'currentPassword'.tr,
-                            ),
-                            widgetButton(
-                              context,
-                              'edit'.tr,
-                              colorText: Colors.white,
-                              colorButton: greenColor,
-                              fontSize: Get.width * .035,
-                              fontWeight: FontWeight.bold,
-                              width: Get.width * .9,
-                              onTap: () {
-                                controller.optionTap.value = 5;
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Obx(
-                      () => Visibility(
-                        visible: controller.optionTap.value == 5,
-                        child: Column(
-                          children: [
-                            widgetTextForm(
-                              context,
-                              obscureText: true,
-                              controller: controller.controllerCurrentPassword,
-                              errorText:
-                                  (isLogin['Password'] != passwordAfterMd5)
-                                  ? 'pleaseEnterTheCurrentPassword'.tr
-                                  : null,
-                              hintText: 'currentPassword'.tr,
-                              onChanged: (v) {
-                                passwordAfterMd5 = textToMd5(v);
-                                if (isLogin['Password'] == passwordAfterMd5 &&
-                                    controller.controllerReNewPassword.value ==
-                                        controller
-                                            .controllerNewPassword
-                                            .value) {
-                                  controller.validateChangePassword.value =
-                                      true;
-                                } else {
-                                  controller.validateChangePassword.value =
-                                      false;
-                                }
-                                setState(() {});
-                              },
-                            ),
-                            widgetTextForm(
-                              context,
-                              obscureText: true,
-                              hintText: 'newPassword'.tr,
-                              controller: controller.controllerNewPassword,
-                              onChanged: (v) {
-                                if (isLogin['Password'] == passwordAfterMd5 &&
-                                    controller.controllerReNewPassword.value ==
-                                        controller
-                                            .controllerNewPassword
-                                            .value) {
-                                  controller.validateChangePassword.value =
-                                      true;
-                                } else {
-                                  controller.validateChangePassword.value =
-                                      false;
-                                }
-                                setState(() {});
-                              },
-                            ),
-                            widgetTextForm(
-                              context,
-                              obscureText: true,
-                              hintText: 'retypePassword'.tr,
-                              controller: controller.controllerReNewPassword,
-                              errorText:
-                                  controller.controllerReNewPassword.value !=
-                                      controller.controllerNewPassword.value
-                                  ? 'thePasswordIsNotIdentical'.tr
-                                  : null,
-                              onChanged: (v) {
-                                if (isLogin['Password'] == passwordAfterMd5 &&
-                                    controller.controllerReNewPassword.value ==
-                                        controller
-                                            .controllerNewPassword
-                                            .value) {
-                                  controller.validateChangePassword.value =
-                                      true;
-                                } else {
-                                  controller.validateChangePassword.value =
-                                      false;
-                                }
-                                setState(() {});
-                              },
-                            ),
-                            widgetButton(
-                              context,
-                              'changing'.tr,
-                              colorText: Colors.white,
-                              colorButton:
-                                  controller
-                                          .controllerReNewPassword
-                                          .value
-                                          .text
-                                          .isNotEmpty &&
-                                      controller.validateChangePassword.value
-                                  ? greenColor
-                                  : null,
-                              fontSize: Get.width * .035,
-                              fontWeight: FontWeight.bold,
-                              width: Get.width * .9,
-                              isProgress: controller.isProgress.value,
-                              onTap: () {
-                                if (controller.isProgress.value != true &&
-                                    isLogin['Password'] == passwordAfterMd5 &&
-                                    controller.controllerReNewPassword.value ==
-                                        controller
-                                            .controllerNewPassword
-                                            .value &&
-                                    controller
-                                        .controllerReNewPassword
-                                        .value
-                                        .text
-                                        .isNotEmpty) {
-                                  controller.updatePassword();
-                                }
-                              },
-                            ),
-                          ],
-                        ),
-                      ),
+                    _buildAvatarSection(isDark, controller, context),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildNameSection(context, isLogin, controller),
                     ),
                   ],
                 ),
               ),
-            );
-          },
+
+              const SizedBox(height: 24),
+
+              // SECTION: TAB SELECTOR (Modern Chips)
+              _buildTabSelector(isDark, controller, context),
+
+              const SizedBox(height: 20),
+
+              // SECTION: CONTENT CARD
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: _containerDecoration(isDark, context),
+                child: _buildDynamicContent(
+                  context,
+                  isDark,
+                  controller,
+                  isLogin,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Container widgetPhoneNumber(context, {isEnabled = false}) {
-    return Container(
-      margin: EdgeInsets.only(bottom: Get.height * .015),
-      decoration: BoxDecoration(
-        color: themeModeValue == 'light' ? Colors.white : buttonDarkColor,
-        borderRadius: BorderRadius.circular(10.0),
-        border: Border.all(
-          color: themeModeValue == 'light' ? greyColor : Colors.transparent,
-          width: 1,
+  // --- UI CONSTANTS FROM SETTINGS PAGE ---
+  BoxDecoration _containerDecoration(bool isDark, BuildContext context) {
+    return BoxDecoration(
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      borderRadius: BorderRadius.circular(24.0),
+      border: Border.all(color: const Color(0xFFDBDBDB).withOpacity(0.2)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.03),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
         ),
-        boxShadow: [
-          BoxShadow(
-            color: themeModeValue == 'light'
-                ? Colors.grey.withAlpha((255 * 0.3).toInt())
-                : Colors.transparent,
-            spreadRadius: 2,
-            blurRadius: 7,
-            offset: const Offset(0, 0),
+      ],
+    );
+  }
+
+  // --- AVATAR UI ---
+  Widget _buildAvatarSection(
+    bool isDark,
+    ProfileController controller,
+    BuildContext context,
+  ) {
+    return GestureDetector(
+      onTap: () =>
+          _showDialogUploadImageFromGalleryOrCameraForLogo(controller, context),
+      child: Obx(
+        () => Stack(
+          alignment: Alignment.bottomRight,
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: greenColor.withOpacity(0.2),
+                  width: 2,
+                ),
+                image: DecorationImage(
+                  fit: BoxFit.cover,
+                  image: controller.imageProfileBase64.value != null
+                      ? MemoryImage(
+                          base64.decode(controller.imageProfileBase64.value!),
+                        )
+                      : AssetImage(pngCharacter) as ImageProvider,
+                ),
+              ),
+            ),
+            CircleAvatar(
+              radius: 12,
+              backgroundColor: greenColor,
+              child: const Icon(Icons.edit, size: 12, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- HEADER TEXT UI ---
+  Widget _buildNameSection(
+    BuildContext context,
+    dynamic isLogin,
+    ProfileController controller,
+  ) {
+    return Obx(() {
+      // Trigger rebuild when optionTap changes (after updates)
+      controller.optionTap.value;
+      final freshLogin = readGetStorage(loginKey);
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          widgetText(
+            context,
+            "${freshLogin?['FirstNameAr'] ?? freshLogin?['FirstNameEn'] ?? ''} ${freshLogin?['LastNameAr'] ?? freshLogin?['LastNameEn'] ?? ''}",
+            fontWeight: FontWeight.bold,
+            fontSize: 18,
+          ),
+          const SizedBox(height: 4),
+          widgetText(
+            context,
+            _getCustomerGroupName(controller, freshLogin),
+            fontSize: 13,
+            color: greenColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ],
+      );
+    });
+  }
+
+  String _getCustomerGroupName(ProfileController controller, dynamic isLogin) {
+    if (isLogin == null || isLogin['CustGroupID'] == null) {
+      return 'clientType'.tr;
+    }
+    var group = controller.listUserAccountTypes
+        .where((e) => e.id == isLogin['CustGroupID'])
+        .toList();
+    if (group.isNotEmpty) {
+      return language == 'ar' ? group[0].descriptionAr : group[0].descriptionEn;
+    }
+    return 'clientType'.tr;
+  }
+
+  // --- TAB UI ---
+  Widget _buildTabSelector(
+    bool isDark,
+    ProfileController controller,
+    BuildContext context,
+  ) {
+    return Obx(
+      () => SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
+            _widgetTab(
+              'profilePersonally',
+              0,
+              active: [0, 3].contains(controller.optionTap.value),
+              controller: controller,
+              context: context,
+              isLogin: readGetStorage(loginKey),
+            ),
+            _widgetTab(
+              'contactInformation',
+              1,
+              active: [1, 4].contains(controller.optionTap.value),
+              controller: controller,
+              context: context,
+              isLogin: readGetStorage(loginKey),
+            ),
+            _widgetTab(
+              'confidentialityAndSecurity',
+              2,
+              active: [2, 5].contains(controller.optionTap.value),
+              controller: controller,
+              context: context,
+              isLogin: readGetStorage(loginKey),
+            ),
+            _widgetTab(
+              'deleteAnAccount',
+              -1,
+              active: controller.optionTap.value == -1,
+              isDelete: true,
+              controller: controller,
+              context: context,
+              isLogin: readGetStorage(loginKey),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _widgetTab(
+    String text,
+    int intTap, {
+    required bool active,
+    bool isDelete = false,
+    required ProfileController controller,
+    required BuildContext context,
+    required dynamic isLogin,
+  }) {
+    return InkWell(
+      onTap: () {
+        if (intTap == -1) {
+          if (isLogin != null) {
+            controller.deleteMyAccountFunction(
+              isLogin['Email'] ?? '',
+              isLogin['Phone'] ?? '',
+              isLogin['IdentityNumber'] ?? '',
+            );
+          }
+          return;
+        }
+        controller.optionTap.value = intTap;
+      },
+      child: Container(
+        margin: const EdgeInsetsDirectional.only(end: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: active
+              ? (isDelete ? Colors.red : greenColor)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: active ? Colors.transparent : greyColor2.withOpacity(0.2),
+          ),
+        ),
+        child: widgetText(
+          context,
+          text.tr,
+          fontSize: 13,
+          color: active
+              ? Colors.white
+              : (themeModeValue == 'dark' ? Colors.white70 : darkColor),
+          fontWeight: active ? FontWeight.bold : FontWeight.normal,
+        ),
+      ),
+    );
+  }
+
+  // --- DYNAMIC CONTENT BODY ---
+  Widget _buildDynamicContent(
+    BuildContext context,
+    bool isDark,
+    ProfileController controller,
+    dynamic isLogin,
+  ) {
+    return Obx(() {
+      int tap = controller.optionTap.value;
+      if (tap == 0) return _viewPersonalSection(context, isLogin, controller);
+      if (tap == 3) return _editPersonalSection(context, controller);
+      if (tap == 1) return _viewContactSection(context, isLogin, controller);
+      if (tap == 4) return _editContactSection(context, controller);
+      if (tap == 2) return _viewSecuritySection(context, controller);
+      if (tap == 5) return _editSecuritySection(context, controller);
+      return const SizedBox();
+    });
+  }
+
+  // --- TAB 0: VIEW PERSONAL ---
+  Widget _viewPersonalSection(
+    BuildContext context,
+    dynamic isLogin,
+    ProfileController controller,
+  ) {
+    // Wrap in Obx and re-read from storage to react to updates
+    return Obx(() {
+      // Trigger rebuild when optionTap changes (forces re-read from storage)
+      controller.optionTap.value;
+      // Re-read fresh data from storage
+      final freshLogin = readGetStorage(loginKey);
+
+      // Helper to get name with fallback to Arabic if English is empty
+      String getName(String? arabic, String? english) {
+        if (language == "ar") {
+          return arabic ?? '';
+        } else {
+          // If English name exists and is not empty, use it; otherwise fallback to Arabic
+          return (english != null && english.isNotEmpty)
+              ? english
+              : (arabic ?? '');
+        }
+      }
+
+      // Get gender description
+      String genderText = '';
+      int? genderId = freshLogin?['GenderID'];
+      if (genderId != null && controller.genders.isNotEmpty) {
+        var gender = controller.genders.firstWhereOrNull(
+          (g) => g.id == genderId,
+        );
+        genderText = gender?.description ?? '';
+      }
+
+      // Get country description
+      String countryText = '';
+      int? countryId = freshLogin?['CountryID'];
+      if (countryId != null && controller.countries.isNotEmpty) {
+        var country = controller.countries.firstWhereOrNull(
+          (c) => c.id == countryId,
+        );
+        countryText = country?.description ?? '';
+      }
+
+      // Get city description
+      String cityText = '';
+      int? cityId = freshLogin?['CityID'];
+      if (cityId != null && controller.cities.isNotEmpty) {
+        var city = controller.cities.firstWhereOrNull((c) => c.id == cityId);
+        cityText = city?.description ?? '';
+      }
+
+      // Get account type description
+      String accountTypeText = '';
+      String? custGroupId = freshLogin?['CustGroupID'];
+      if (custGroupId != null && controller.listUserAccountTypes.isNotEmpty) {
+        var accountType = controller.listUserAccountTypes.firstWhereOrNull(
+          (a) => a.id == custGroupId,
+        );
+        if (accountType != null) {
+          accountTypeText = language == 'ar'
+              ? accountType.descriptionAr
+              : accountType.descriptionEn;
+        }
+      }
+
+      return Column(
+        children: [
+          // Names
+          _buildDataRow(
+            context,
+            'firstName'.tr,
+            getName(freshLogin?['FirstNameAr'], freshLogin?['FirstNameEn']),
+          ),
+          _buildDataRow(
+            context,
+            'middleName'.tr,
+            getName(freshLogin?['MiddleNameAr'], freshLogin?['MiddleNameEn']),
+          ),
+          _buildDataRow(
+            context,
+            'grandfatherName'.tr,
+            getName(
+              freshLogin?['GrandFatherNameAr'],
+              freshLogin?['GrandFatherNameEn'],
+            ),
+          ),
+          _buildDataRow(
+            context,
+            'lastName'.tr,
+            getName(freshLogin?['LastNameAr'], freshLogin?['LastNameEn']),
+          ),
+
+          // Gender
+          if (genderText.isNotEmpty)
+            _buildDataRow(context, 'gender'.tr, genderText),
+
+          // Country & City
+          if (countryText.isNotEmpty)
+            _buildDataRow(context, 'country'.tr, countryText),
+          if (cityText.isNotEmpty) _buildDataRow(context, 'city'.tr, cityText),
+
+          // Address
+          if (freshLogin?['Address'] != null &&
+              freshLogin['Address'].toString().isNotEmpty)
+            _buildDataRow(
+              context,
+              'theAddress'.tr,
+              freshLogin?['Address'] ?? '',
+            ),
+
+          // Account Type
+          if (accountTypeText.isNotEmpty)
+            _buildDataRow(context, 'accountType'.tr, accountTypeText),
+
+          // Identity Number or Commercial Registration (based on account type)
+          if (freshLogin?['IdentityNumber'] != null &&
+              freshLogin['IdentityNumber'].toString().isNotEmpty)
+            _buildDataRow(
+              context,
+              'identityNumber'.tr,
+              freshLogin?['IdentityNumber'] ?? '',
+            ),
+          if (freshLogin?['TradeNo'] != null &&
+              freshLogin['TradeNo'].toString().isNotEmpty)
+            _buildDataRow(
+              context,
+              'commercialRegistration'.tr,
+              freshLogin?['TradeNo'] ?? '',
+            ),
+
+          const SizedBox(height: 12),
+          widgetButton(
+            context,
+            'edit'.tr,
+            colorButton: greenColor,
+            colorText: Colors.white,
+            onTap: () {
+              controller.isProgress.value = false; // Reset loading state
+              controller.optionTap.value = 3;
+            },
+          ),
+        ],
+      );
+    });
+  }
+
+  // --- TAB 3: EDIT PERSONAL ---
+  Widget _editPersonalSection(
+    BuildContext context,
+    ProfileController controller,
+  ) {
+    return Obx(
+      () => Column(
+        children: [
+          // Arabic Names Section
+          widgetText(
+            context,
+            'arabicNames'.tr,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+          const SizedBox(height: 8),
+          widgetTextForm(
+            context,
+            controller: controller.controllerFistName,
+            hintText: 'firstName'.tr + 'arabicSuffix'.tr,
+          ),
+          widgetTextForm(
+            context,
+            controller: controller.controllerMiddleName,
+            hintText: 'middleName'.tr + 'arabicSuffix'.tr,
+          ),
+          widgetTextForm(
+            context,
+            controller: controller.controllerGrandFatherName,
+            hintText: 'grandfatherName'.tr + 'arabicSuffix'.tr,
+          ),
+          widgetTextForm(
+            context,
+            controller: controller.controllerLastName,
+            hintText: 'lastName'.tr + 'arabicSuffix'.tr,
+          ),
+
+          const SizedBox(height: 16),
+
+          // English Names Section
+          widgetText(
+            context,
+            'englishNames'.tr,
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+          const SizedBox(height: 8),
+          widgetTextForm(
+            context,
+            controller: controller.controllerFirstNameEn,
+            hintText: 'firstName'.tr + 'englishSuffix'.tr,
+          ),
+          widgetTextForm(
+            context,
+            controller: controller.controllerMiddleNameEn,
+            hintText: 'middleName'.tr + 'englishSuffix'.tr,
+          ),
+          widgetTextForm(
+            context,
+            controller: controller.controllerGrandFatherNameEn,
+            hintText: 'grandfatherName'.tr + 'englishSuffix'.tr,
+          ),
+          widgetTextForm(
+            context,
+            controller: controller.controllerLastNameEn,
+            hintText: 'lastName'.tr + 'englishSuffix'.tr,
+          ),
+
+          const SizedBox(height: 16),
+
+          // Gender Dropdown (Interactive)
+          widgetText(context, 'gender'.tr, fontSize: 13, color: greyColor2),
+          const SizedBox(height: 4),
+          _buildGenderDropdownActive(controller, context),
+
+          // Country Dropdown
+          widgetText(context, 'country'.tr, fontSize: 13, color: greyColor2),
+          const SizedBox(height: 4),
+          _buildCountryDropdown(controller, context),
+
+          // City Dropdown
+          widgetText(context, 'city'.tr, fontSize: 13, color: greyColor2),
+          const SizedBox(height: 4),
+          _buildCityDropdown(controller, context),
+
+          // Address
+          widgetTextForm(
+            context,
+            controller: controller.controllerAddress,
+            hintText: 'theAddress'.tr,
+          ),
+
+          const SizedBox(height: 16),
+
+          // Account Type Dropdown
+          widgetText(
+            context,
+            'accountType'.tr,
+            fontSize: 13,
+            color: greyColor2,
+          ),
+          const SizedBox(height: 4),
+          _buildAccountTypeDropdown(controller, context),
+
+          // Dynamic Identity/CR Fields
+          _buildDynamicDocumentSection(controller, context),
+
+          const SizedBox(height: 12),
+          widgetButton(
+            context,
+            'save'.tr,
+            colorButton: greenColor,
+            colorText: Colors.white,
+            isProgress: controller.isProgress.value,
+            onTap: () async {
+              debugPrint("Save button clicked!");
+              await controller.updateProfilePersonally();
+              debugPrint("updateProfilePersonally returned!");
+            },
           ),
         ],
       ),
+    );
+  }
+
+  // --- TAB 1: VIEW CONTACT ---
+  Widget _viewContactSection(
+    BuildContext context,
+    dynamic isLogin,
+    ProfileController controller,
+  ) {
+    return Obx(() {
+      // Trigger rebuild when optionTap changes
+      controller.optionTap.value;
+      final freshLogin = readGetStorage(loginKey);
+
+      return Column(
+        children: [
+          _buildDataRow(context, 'mobileNumber'.tr, freshLogin?['Phone'] ?? ''),
+          _buildDataRow(context, 'email'.tr, freshLogin?['Email'] ?? ''),
+          const SizedBox(height: 12),
+          widgetButton(
+            context,
+            'edit'.tr,
+            colorButton: greenColor,
+            colorText: Colors.white,
+            onTap: () {
+              controller.isProgress.value = false; // Reset loading state
+              controller.optionTap.value = 4;
+            },
+          ),
+        ],
+      );
+    });
+  }
+
+  // --- TAB 4: EDIT CONTACT ---
+  Widget _editContactSection(
+    BuildContext context,
+    ProfileController controller,
+  ) {
+    return Obx(
+      () => Column(
+        children: [
+          _widgetPhoneNumber(context, controller, isEnabled: true),
+          widgetTextForm(
+            context,
+            controller: controller.controllerEmail,
+            hintText: 'email'.tr,
+            textDirection: TextDirection.ltr,
+          ),
+          const SizedBox(height: 12),
+          widgetButton(
+            context,
+            'save'.tr,
+            colorButton: greenColor,
+            colorText: Colors.white,
+            isProgress: controller.isProgress.value,
+            onTap: () => controller.updatePasswordContactInformation(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- TAB 2: VIEW SECURITY ---
+  Widget _viewSecuritySection(
+    BuildContext context,
+    ProfileController controller,
+  ) {
+    return Column(
+      children: [
+        _buildDataRow(context, 'currentPassword'.tr, '********'),
+        const SizedBox(height: 12),
+        widgetButton(
+          context,
+          'edit'.tr,
+          colorButton: greenColor,
+          colorText: Colors.white,
+          onTap: () {
+            controller.isProgress.value = false; // Reset loading state
+            controller.optionTap.value = 5;
+          },
+        ),
+      ],
+    );
+  }
+
+  // --- TAB 5: EDIT SECURITY ---
+  Widget _editSecuritySection(
+    BuildContext context,
+    ProfileController controller,
+  ) {
+    return Obx(
+      () => Column(
+        children: [
+          widgetTextForm(
+            context,
+            controller: controller.controllerCurrentPassword,
+            hintText: 'currentPassword'.tr,
+            obscureText: true,
+          ),
+          widgetTextForm(
+            context,
+            controller: controller.controllerNewPassword,
+            hintText: 'newPassword'.tr,
+            obscureText: true,
+          ),
+          widgetTextForm(
+            context,
+            controller: controller.controllerReNewPassword,
+            hintText: 'retypePassword'.tr,
+            obscureText: true,
+          ),
+          const SizedBox(height: 12),
+          widgetButton(
+            context,
+            'changing'.tr,
+            colorButton: greenColor,
+            colorText: Colors.white,
+            isProgress: controller.isProgress.value,
+            onTap: () => controller.updatePassword(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- HELPER COMPONENTS ---
+  Widget _buildDataRow(BuildContext context, String label, dynamic value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          widgetText(context, label, color: greyColor2, fontSize: 12),
+          const SizedBox(height: 4),
+          widgetText(
+            context,
+            value?.toString() ?? '',
+            fontWeight: FontWeight.bold,
+            fontSize: 15,
+          ),
+          const SizedBox(height: 10),
+          Container(height: 1, color: greyColor2.withOpacity(0.1)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGenderPicker(
+    ProfileController controller,
+    BuildContext context,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          Radio(
+            value: 1,
+            groupValue: controller.idGender.value,
+            activeColor: greenColor,
+            onChanged: (v) {},
+          ),
+          widgetText(context, 'male'.tr, fontSize: 14),
+          const SizedBox(width: 20),
+          Radio(
+            value: 2,
+            groupValue: controller.idGender.value,
+            activeColor: greenColor,
+            onChanged: (v) {},
+          ),
+          widgetText(context, 'female'.tr, fontSize: 14),
+        ],
+      ),
+    );
+  }
+
+  Widget _widgetPhoneNumber(
+    BuildContext context,
+    ProfileController controller, {
+    bool isEnabled = false,
+  }) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      decoration: BoxDecoration(
+        color: themeModeValue == 'light' ? Colors.white : buttonDarkColor,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: themeModeValue == 'light'
+              ? greyColor.withOpacity(0.3)
+              : Colors.transparent,
+        ),
+      ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: Get.width * .05),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Directionality(
           textDirection: TextDirection.ltr,
           child: TextField(
@@ -865,9 +813,6 @@ class _profileDetailsState extends State<profileDetails> {
             ),
             decoration: InputDecoration(
               border: InputBorder.none,
-              errorText: controller.validatePhoneNumber.value
-                  ? null
-                  : 'phoneNumberInvalid'.tr,
               hintText: 'mobileNumber'.tr,
             ),
           ),
@@ -876,252 +821,455 @@ class _profileDetailsState extends State<profileDetails> {
     );
   }
 
-  Future showDialogUploadImageFromGalleryOrCameraForIdentificationNumber() {
-    return Get.dialog(
-      AlertDialog(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-        ),
-        contentPadding: const EdgeInsets.only(top: 10.0),
-        content: Container(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              SizedBox(height: Get.height * .02),
-              SizedBox(height: Get.height * .01),
-              Container(
-                width: Get.width * .6,
-                height: Get.width * .6,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  image: DecorationImage(
-                    fit: BoxFit.fill,
-                    image: MemoryImage(base64.decode(isLogin['IdentityImage'])),
-                  ),
-                ),
-              ),
-              SizedBox(height: Get.height * .01),
-              SizedBox(height: Get.height * .05),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future showDialogUploadImageFromGalleryOrCameraForLogo() {
-    return Get.dialog(
-      AlertDialog(
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-        ),
-        contentPadding: const EdgeInsets.only(top: 10.0),
-        content: Container(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              SizedBox(height: Get.height * .02),
-              SizedBox(height: Get.height * .01),
-              /*      Stack(children: [
-                  isLogin['Logo'] != null
-                      ? Container(
-                          width: Get.width * .6,
-                          height: Get.width * .6,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                fit: BoxFit.fill,
-                                image: MemoryImage(
-                                  base64.decode(isLogin['Logo']),
-                                ),
-                              )))
-                      : Container(
-                          width: Get.width * .6,
-                          height: Get.width * .6,
-                          decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                fit: BoxFit.fill,
-                                image: AssetImage(
-                                  pngCharacter,
-                                ),
-                              )),
-                        ),
-
-                ]),*/
-              Stack(
-                alignment: Alignment.bottomRight,
-                children: [
-                  controller.imageProfileBase64 == null
-                      ? Container(
-                          width: Get.width * .4,
-                          height: Get.width * .4,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              fit: BoxFit.fill,
-                              image: AssetImage(pngCharacter),
-                            ),
-                          ),
-                        )
-                      : Container(
-                          width: Get.width * .4,
-                          height: Get.width * .4,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            image: DecorationImage(
-                              fit: BoxFit.fill,
-                              image: MemoryImage(
-                                base64.decode(controller.imageProfileBase64),
-                              ),
-                            ),
-                          ),
-                        ),
-                  InkWell(
-                    onTap: () async {
-                      showDialogUploadImageFromGalleryOrCamera();
-                    },
-                    child: Padding(
-                      padding: EdgeInsets.only(
-                        bottom: Get.width * .03,
-                        right: Get.width * .03,
-                      ),
-                      child: Material(
-                        color: Colors.white,
-                        shape: const CircleBorder(
-                          side: BorderSide(color: Colors.white),
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.all(Get.width * .01),
-                          child: Icon(
-                            Icons.camera_alt,
-                            color: themeModeValue == 'dark'
-                                ? Colors.white
-                                : darkColor,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: Get.height * .01),
-              SizedBox(height: Get.height * .05),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  InkWell _widgetTab(text, int intTap, {bool activeColor = false}) {
-    return InkWell(
-      onTap: () {
-        if (intTap == -1) {
-          controller.deleteMyAccountFunction(
-            isLogin['Email'],
-            isLogin['Phone'],
-            isLogin['IdentityNumber'],
-          );
-          return;
-        }
-        controller.optionTap.value = intTap;
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border.all(color: activeColor ? greenColor : darkColor),
-          borderRadius: BorderRadius.circular(10),
-        ),
-        padding: EdgeInsets.symmetric(
-          horizontal: Get.width * .02,
-          vertical: Get.height * .01,
-        ),
-        margin: EdgeInsets.symmetric(vertical: Get.height * .02),
-        child: widgetText(context, '$text'.tr, fontSize: Get.width * .035),
-      ),
-    );
-  }
-
-  Future showDialogUploadImageFromGalleryOrCamera() {
+  // --- DIALOGS (UI CLEANED) ---
+  Future _showDialogUploadImageFromGalleryOrCameraForLogo(
+    ProfileController controller,
+    BuildContext context,
+  ) {
     return Get.dialog(
       AlertDialog(
         backgroundColor: themeModeValue == 'light' ? Colors.white : darkColor,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-        ),
-        contentPadding: const EdgeInsets.only(top: 10.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         content: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
-          children: <Widget>[
-            SizedBox(height: Get.height * .02),
-            widgetText(
-              context,
-              'chooseAPhoto'.tr,
-              fontSize: Get.width * .03,
-              fontWeight: FontWeight.bold,
-            ),
-            SizedBox(height: Get.height * .015),
+          children: [
+            const SizedBox(height: 10),
+            widgetText(context, 'chooseAPhoto'.tr, fontWeight: FontWeight.bold),
+            const SizedBox(height: 30),
             Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                InkWell(
-                  onTap: () async {
-                    XFile? file = await ImagePicker().pickImage(
-                      source: ImageSource.camera,
+                _dialogIcon(svgLogoCamera, () async {
+                  XFile? file = await ImagePicker().pickImage(
+                    source: ImageSource.camera,
+                  );
+                  if (file != null) {
+                    controller.imageProfileBase64.value = base64.encode(
+                      await file.readAsBytes(),
                     );
-                    Uint8List imagebytes = await file!.readAsBytes();
-                    controller.imageProfileBase64 = base64.encode(imagebytes);
-
                     controller.updateLogo();
-                    Get.back();
-                    Get.back();
-                  },
-                  child: SvgPicture.asset(
-                    svgLogoCamera,
-                    height: Get.height * .055,
-                    semanticsLabel: 'Acme Logo',
-                  ),
-                ),
-                SizedBox(width: Get.width * .08),
-                Container(
-                  margin: EdgeInsets.only(top: Get.height * .022),
-                  width: Get.width * .0008,
-                  height: Get.height * .02,
-                  color: greyColor3,
-                ),
-                SizedBox(width: Get.width * .08),
-                InkWell(
-                  onTap: () async {
-                    XFile? file = await ImagePicker().pickImage(
-                      source: ImageSource.gallery,
+                  }
+                  Get.back();
+                }),
+                _dialogIcon(svgLogoLibrary, () async {
+                  XFile? file = await ImagePicker().pickImage(
+                    source: ImageSource.gallery,
+                  );
+                  if (file != null) {
+                    controller.imageProfileBase64.value = base64.encode(
+                      await file.readAsBytes(),
                     );
-                    Uint8List imagebytes = await file!.readAsBytes();
-                    controller.imageProfileBase64 = base64.encode(imagebytes);
-
                     controller.updateLogo();
-                    Get.back();
-                    Get.back();
-                  },
-                  child: SvgPicture.asset(
-                    svgLogoLibrary,
-                    height: Get.height * .055,
-                  ),
-                ),
+                  }
+                  Get.back();
+                }),
               ],
             ),
-            SizedBox(height: Get.height * .02),
-            Container(
-              width: Get.width * .48,
-              height: Get.height * .0006,
-              color: greyColor3,
-            ),
-            SizedBox(height: Get.height * .05),
+            const SizedBox(height: 20),
           ],
         ),
       ),
     );
+  }
+
+  Widget _dialogIcon(String icon, VoidCallback onTap) {
+    return InkWell(onTap: onTap, child: SvgPicture.asset(icon, height: 50));
+  }
+
+  // --- NEW HELPER METHODS FOR ENHANCED PROFILE ---
+
+  // Interactive Gender Dropdown (replaces disabled radio buttons)
+  Widget _buildGenderDropdownActive(
+    ProfileController controller,
+    BuildContext context,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      decoration: BoxDecoration(
+        color: themeModeValue == 'light' ? Colors.white : buttonDarkColor,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: themeModeValue == 'light'
+              ? greyColor.withOpacity(0.3)
+              : Colors.transparent,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Obx(() {
+          var genders = controller.genders;
+
+          // If no genders loaded from API, use fallback
+          if (genders.isEmpty) {
+            // Check if current value is valid for fallback (1 or 2)
+            int? currentGenderValue = controller.idGender.value;
+            bool isValidFallback =
+                currentGenderValue == 1 || currentGenderValue == 2;
+
+            return DropdownButtonHideUnderline(
+              child: DropdownButton<int>(
+                isExpanded: true,
+                value: isValidFallback ? currentGenderValue : null,
+                hint: widgetText(context, 'selectGender'.tr, fontSize: 14),
+                items: [
+                  DropdownMenuItem<int>(
+                    value: 1,
+                    child: widgetText(context, 'male'.tr, fontSize: 14),
+                  ),
+                  DropdownMenuItem<int>(
+                    value: 2,
+                    child: widgetText(context, 'female'.tr, fontSize: 14),
+                  ),
+                ],
+                onChanged: (int? newValue) {
+                  if (newValue != null) {
+                    controller.idGender.value = newValue;
+                  }
+                },
+              ),
+            );
+          }
+
+          // Check if current value exists in loaded genders
+          int? currentValue = controller.idGender.value;
+          bool valueExists = genders.any((g) => g.id == currentValue);
+
+          // Use actual gender data from API
+          return DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              isExpanded: true,
+              value: valueExists ? currentValue : null,
+              hint: widgetText(context, 'selectGender'.tr, fontSize: 14),
+              items: genders.map((gender) {
+                return DropdownMenuItem<int>(
+                  value: gender.id,
+                  child: widgetText(context, gender.description, fontSize: 14),
+                );
+              }).toList(),
+              onChanged: (int? newValue) {
+                if (newValue != null) {
+                  controller.idGender.value = newValue;
+                  var selectedGender = genders.firstWhereOrNull(
+                    (g) => g.id == newValue,
+                  );
+                  if (selectedGender != null) {
+                    controller.selectedGender.value = selectedGender;
+                  }
+                }
+              },
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // Country Dropdown
+  Widget _buildCountryDropdown(
+    ProfileController controller,
+    BuildContext context,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      decoration: BoxDecoration(
+        color: themeModeValue == 'light' ? Colors.white : buttonDarkColor,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: themeModeValue == 'light'
+              ? greyColor.withOpacity(0.3)
+              : Colors.transparent,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Obx(() {
+          var countries = controller.countries;
+          var selected = controller.selectedCountry.value;
+
+          // Safety check: ensure selected value exists in the list
+          // Deduplicate items by ID
+          var seenIds = <int>{};
+          var uniqueItems = countries
+              .where((item) => seenIds.add(item.id))
+              .toList();
+
+          int? currentId = selected?.id;
+          bool valueExists =
+              currentId != null && uniqueItems.any((c) => c.id == currentId);
+
+          return DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              isExpanded: true,
+              value: valueExists ? currentId : null,
+              hint: widgetText(context, 'selectCountry'.tr, fontSize: 14),
+              items: uniqueItems.map((country) {
+                return DropdownMenuItem<int>(
+                  value: country.id,
+                  child: widgetText(context, country.description, fontSize: 14),
+                );
+              }).toList(),
+              onChanged: (int? newValue) {
+                if (newValue != null) {
+                  var country = countries.firstWhereOrNull(
+                    (c) => c.id == newValue,
+                  );
+                  if (country != null) {
+                    controller.selectedCountry.value = country;
+                    controller.countryID.value = country.id;
+                    controller.filterCities(country.id);
+                    // Reset city selection
+                    controller.selectedCity.value = null;
+                    controller.cityID.value = null;
+                  }
+                }
+              },
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // City Dropdown (filtered by country)
+  Widget _buildCityDropdown(
+    ProfileController controller,
+    BuildContext context,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      decoration: BoxDecoration(
+        color: themeModeValue == 'light' ? Colors.white : buttonDarkColor,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: themeModeValue == 'light'
+              ? greyColor.withOpacity(0.3)
+              : Colors.transparent,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Obx(() {
+          var cities = controller.filteredCities;
+          var selected = controller.selectedCity.value;
+
+          // Safety check: ensure selected value exists in the list
+          // Deduplicate items by ID
+          var seenIds = <int>{};
+          var uniqueItems = cities
+              .where((item) => seenIds.add(item.id))
+              .toList();
+
+          int? currentId = selected?.id;
+          bool valueExists =
+              currentId != null && uniqueItems.any((c) => c.id == currentId);
+
+          return DropdownButtonHideUnderline(
+            child: DropdownButton<int>(
+              isExpanded: true,
+              value: valueExists ? currentId : null,
+              hint: widgetText(context, 'selectCity'.tr, fontSize: 14),
+              items: uniqueItems.map((city) {
+                return DropdownMenuItem<int>(
+                  value: city.id,
+                  child: widgetText(context, city.description, fontSize: 14),
+                );
+              }).toList(),
+              onChanged: uniqueItems.isNotEmpty
+                  ? (int? newValue) {
+                      if (newValue != null) {
+                        var city = cities.firstWhereOrNull(
+                          (c) => c.id == newValue,
+                        );
+                        if (city != null) {
+                          controller.selectedCity.value = city;
+                          controller.cityID.value = city.id;
+                        }
+                      }
+                    }
+                  : null,
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // Account Type Dropdown
+  Widget _buildAccountTypeDropdown(
+    ProfileController controller,
+    BuildContext context,
+  ) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 15),
+      decoration: BoxDecoration(
+        color: themeModeValue == 'light' ? Colors.white : buttonDarkColor,
+        borderRadius: BorderRadius.circular(12.0),
+        border: Border.all(
+          color: themeModeValue == 'light'
+              ? greyColor.withOpacity(0.3)
+              : Colors.transparent,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        child: Obx(() {
+          var accountTypes = controller.listUserAccountTypes;
+          var selected = controller.selectedAccountType.value;
+
+          // Safety check: ensure selected value exists in the list
+          // Deduplicate items by ID
+          var seenIds = <String>{};
+          var uniqueItems = accountTypes
+              .where((item) => seenIds.add(item.id))
+              .toList();
+
+          String? currentId = selected?.id;
+          bool valueExists =
+              currentId != null && uniqueItems.any((a) => a.id == currentId);
+
+          return DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              isExpanded: true,
+              value: valueExists ? currentId : null,
+              hint: widgetText(context, 'selectAccountType'.tr, fontSize: 14),
+              items: uniqueItems.map((accountType) {
+                String description = language == 'ar'
+                    ? accountType.descriptionAr
+                    : accountType.descriptionEn;
+                return DropdownMenuItem<String>(
+                  value: accountType.id,
+                  child: widgetText(context, description, fontSize: 14),
+                );
+              }).toList(),
+              onChanged: (String? newValue) {
+                if (newValue != null) {
+                  var accountType = accountTypes.firstWhereOrNull(
+                    (a) => a.id == newValue,
+                  );
+                  if (accountType != null) {
+                    controller.selectedAccountType.value = accountType;
+                    controller.custGroupID.value = accountType.id;
+                    // Set identity type: 1 = Identity, 2 = CR
+                    controller.identityType.value = accountType.needIdentity
+                        ? 1
+                        : 2;
+
+                    // Clear opposite field when switching types
+                    if (accountType.needIdentity) {
+                      controller.controllerCRNumber.clear();
+                      controller.crImageBase64.value = null;
+                    } else {
+                      controller.controllerIdentityNumber.clear();
+                      controller.identityImageBase64.value = null;
+                    }
+                  }
+                }
+              },
+            ),
+          );
+        }),
+      ),
+    );
+  }
+
+  // Dynamic Document Fields (Identity vs CR)
+  Widget _buildDynamicDocumentSection(
+    ProfileController controller,
+    BuildContext context,
+  ) {
+    return Obx(() {
+      int identityType = controller.identityType.value;
+
+      if (identityType == 1) {
+        // Identity Card fields
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            widgetTextForm(
+              context,
+              controller: controller.controllerIdentityNumber,
+              hintText: 'identityNumber'.tr,
+            ),
+            widgetText(
+              context,
+              'identityImage'.tr,
+              fontSize: 13,
+              color: greyColor2,
+            ),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 15),
+              decoration: BoxDecoration(
+                color: themeModeValue == 'light'
+                    ? Colors.grey[100]
+                    : buttonDarkColor.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.badge, color: greenColor),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: widgetText(
+                      context,
+                      controller.identityImageBase64.value != null &&
+                              controller.identityImageBase64.value!.isNotEmpty
+                          ? 'identityImageUploaded'.tr
+                          : 'noIdentityImage'.tr,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      } else if (identityType == 2) {
+        // Commercial Registration fields
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            widgetTextForm(
+              context,
+              controller: controller.controllerCRNumber,
+              hintText: 'commercialRegistration'.tr,
+            ),
+            widgetText(context, 'crImage'.tr, fontSize: 13, color: greyColor2),
+            const SizedBox(height: 4),
+            Container(
+              padding: const EdgeInsets.all(12),
+              margin: const EdgeInsets.only(bottom: 15),
+              decoration: BoxDecoration(
+                color: themeModeValue == 'light'
+                    ? Colors.grey[100]
+                    : buttonDarkColor.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.business, color: greenColor),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: widgetText(
+                      context,
+                      controller.crImageBase64.value != null &&
+                              controller.crImageBase64.value!.isNotEmpty
+                          ? 'crImageUploaded'.tr
+                          : 'noCRImage'.tr,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      } else {
+        return const SizedBox.shrink();
+      }
+    });
   }
 }

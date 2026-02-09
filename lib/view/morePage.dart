@@ -25,379 +25,280 @@ class _MorePageState extends State<MorePage> {
   var isLogin = readGetStorage(loginKey);
   final LoginAndRegisterControl controller = Get.put(LoginAndRegisterControl());
 
+  // Helper for Theme Colors
+  Color get surfaceColor =>
+      themeModeValue == 'dark' ? buttonDarkColor : Colors.grey.shade50;
+  Color get scaffoldBg => themeModeValue == 'dark' ? darkColor : Colors.white;
+  Color get textColor => themeModeValue == 'dark' ? Colors.white : darkColor;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: themeModeValue == 'dark' ? darkColor : Colors.white,
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
-        backgroundColor: themeModeValue == 'dark' ? darkColor : Colors.white,
-        title: widgetText(
-          context,
+        backgroundColor: scaffoldBg,
+        title: Text(
           'more'.tr,
-          color: themeModeValue == 'light' ? darkColor : Colors.white,
-          fontWeight: FontWeight.bold,
+          style: TextStyle(
+            color: textColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
         ),
         centerTitle: true,
-        elevation: 0.0,
-        iconTheme: IconThemeData(
-          color: themeModeValue == 'light' ? darkColor : Colors.white,
-        ),
+        elevation: 0,
+        iconTheme: IconThemeData(color: textColor),
       ),
       body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
         child: Column(
           children: [
-            isLogin == null
-                ? Container(
-                    height: Responsive.hp(context, 0.20),
-                    decoration: BoxDecoration(
-                      color: themeModeValue == 'light'
-                          ? greyColor5
-                          : buttonDarkColor,
-                      border: Border(
-                        bottom: BorderSide(
-                          width: Get.width * .005,
-                          color: const Color(
-                            0xffE1E6E2,
-                          ).withAlpha((255 * .30).toInt()),
-                        ),
-                      ),
-                    ),
-                    padding: EdgeInsets.only(top: Responsive.hp(context, 0.06)),
-                    child: Column(
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            widgetText(
-                              context,
-                              'youAreNotRegisteredInTheApplication'.tr,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: Responsive.hp(context, 0.02)),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            widgetButton(
-                              context,
-                              'signIn'.tr,
-                              colorText: Colors.white,
-                              colorButton: greenColor,
-                              width: Responsive.wp(context, 0.33),
-                              onTap: () {
-                                Get.to(LoginUserName());
-                              },
-                            ),
-                            SizedBox(width: Responsive.wp(context, 0.03)),
-                            widgetText(context, 'or'.tr),
-                            SizedBox(width: Responsive.wp(context, 0.03)),
-                            widgetButton(
-                              context,
-                              'createAnAccount'.tr,
-                              colorText: Colors.white,
-                              colorButton: greenColor,
-                              width: Responsive.wp(context, 0.33),
-                              onTap: () {
-                                controller.getUserAccountTypes(
-                                  'numberPhone',
-                                  true,
-                                );
-                              },
-                              isProgress: controller.isProgress.value,
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  )
-                : Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        Get.to(const profileDetails());
-                      },
-                      child: Container(
-                        height: Responsive.hp(context, 0.20),
-                        decoration: BoxDecoration(
-                          color: themeModeValue == 'light'
-                              ? greyColor5
-                              : buttonDarkColor,
-                          border: Border(
-                            bottom: BorderSide(
-                              width: Get.width * .005,
-                              color: const Color(
-                                0xffE1E6E2,
-                              ).withAlpha((255 * .30).toInt()),
-                            ),
-                          ),
-                        ),
-                        child: Column(
-                          children: [
-                            Padding(
-                              padding: EdgeInsets.only(
-                                top: Responsive.hp(context, 0.05),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      child: InkWell(
-                                        onTap: () {
-                                          Get.to(const profileDetails());
-                                        },
-                                        child: Column(
-                                          children: [
-                                            isLogin['Logo'] != null
-                                                ? Container(
-                                                    width:
-                                                        Responsive.avatarSize(
-                                                          context,
-                                                        ),
-                                                    height:
-                                                        Responsive.avatarSize(
-                                                          context,
-                                                        ),
-                                                    decoration: BoxDecoration(
-                                                      shape: BoxShape.circle,
-                                                      image: DecorationImage(
-                                                        fit: BoxFit.fill,
-                                                        image: MemoryImage(
-                                                          base64.decode(
-                                                            isLogin['Logo'],
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  )
-                                                : Container(
-                                                    width:
-                                                        Responsive.avatarSize(
-                                                          context,
-                                                        ),
-                                                    height:
-                                                        Responsive.avatarSize(
-                                                          context,
-                                                        ),
-                                                    decoration:
-                                                        const BoxDecoration(
-                                                          shape:
-                                                              BoxShape.circle,
-                                                          image: DecorationImage(
-                                                            fit: BoxFit.fill,
-                                                            image: AssetImage(
-                                                              pngCharacter,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                  ),
-                                          ],
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 5,
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        language == "ar"
-                                            ? Row(
-                                                children: [
-                                                  widgetText(
-                                                    context,
-                                                    isLogin['FirstNameAr'] ??
-                                                        isLogin['FirstNameEn'],
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  SizedBox(
-                                                    width: Responsive.wp(
-                                                      context,
-                                                      0.01,
-                                                    ),
-                                                  ),
-                                                  widgetText(
-                                                    context,
-                                                    (isLogin['LastNameAr'] ??
-                                                        isLogin['LastNameEn'] ??
-                                                        ''),
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ],
-                                              )
-                                            : Row(
-                                                children: [
-                                                  widgetText(
-                                                    context,
-                                                    isLogin['FirstNameEn'] ??
-                                                        isLogin['FirstNameAr'],
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                  SizedBox(
-                                                    width: Get.width * .01,
-                                                  ),
-                                                  widgetText(
-                                                    context,
-                                                    (isLogin['LastNameEn'] ??
-                                                        isLogin['LastNameAr'] ??
-                                                        ''),
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ],
-                                              ),
-                                        SizedBox(
-                                          height: Responsive.wp(context, 0.02),
-                                        ),
-                                        Material(
-                                          color: Colors.transparent,
-                                          child: InkWell(
-                                            onTap: () {
-                                              Get.to(const profileDetails());
-                                            },
-                                            child: Text(
-                                              "profileReview".tr,
-                                              style: TextStyle(
-                                                fontSize: Responsive.scaledFont(
-                                                  context,
-                                                  12,
-                                                ),
-                                                color: greenColor,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Expanded(
-                                    flex: 1,
-                                    child: Column(
-                                      children: [
-                                        IconButton(
-                                          onPressed: () {
-                                            Get.to(const profileDetails());
-                                          },
-                                          icon: Icon(
-                                            Icons.arrow_forward_ios,
-                                            color: arww,
-                                            size: Responsive.wp(context, 0.04),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-            listInMorePage(
-              context,
-              svgMyRequests,
-              "myRequests".tr,
-              onTap: () {
-                isLogin == null
-                    ? messagePleaseLogin()
-                    : Get.to(
-                        GlobalWebView(
-                          '$webUrl$language/myorders/${isLogin['Web_UserID']}',
-                        ),
-                      );
-              },
-              colorText: themeModeValue == 'light' ? darkColor : Colors.white,
-            ),
-            listInMorePage(
-              context,
-              svgMyBookings,
-              "myBookings".tr,
-              onTap: () {
-                isLogin == null
-                    ? messagePleaseLogin()
-                    : Get.to(
-                        GlobalWebView(
-                          '$webUrl$language/maintenance-mycars/myReservation',
-                        ),
-                      );
-              },
-              colorText: themeModeValue == 'light' ? darkColor : Colors.white,
-            ),
-            listInMorePage(
-              context,
-              svgMaintenance,
-              "maintenance".tr,
-              onTap: () {
-                isLogin == null
-                    ? messagePleaseLogin()
-                    : Get.to(GlobalWebView('$webUrl$language/CustomerCar'));
-              },
-              colorText: themeModeValue == 'light' ? darkColor : Colors.white,
-            ),
-            listInMorePage(
-              context,
-              svgInformationAboutUs,
-              "informationAboutUs".tr,
-              onTap: () {
-                Get.to(GlobalWebView('$webUrl$language/about'));
-              },
-              colorText: themeModeValue == 'light' ? darkColor : Colors.white,
-            ),
-            listInMorePage(
-              context,
-              svgCallUs,
-              "callUs".tr,
-              onTap: () {
-                Get.to(GlobalWebView('$webUrl$language/contactus'));
-              },
-              colorText: themeModeValue == 'light' ? darkColor : Colors.white,
-            ),
-            listInMorePage(
-              context,
-              svgRecruitment,
-              "recruitment".tr,
-              onTap: () {
-                Get.to(GlobalWebView('$webUrl$language/jobs'));
-              },
-              colorText: themeModeValue == 'light' ? darkColor : Colors.white,
-            ),
-            listInMorePage(
-              context,
-              svgTips,
-              "advice".tr,
-              onTap: () {
-                Get.to(GlobalWebView('$webUrl$language/tips'));
-              },
-              colorText: themeModeValue == 'light' ? darkColor : Colors.white,
-            ),
-            listInMorePage(
-              context,
-              svgSettings,
-              "settings".tr,
-              onTap: () async {
-                await Get.to(const Settings());
-                setState(() {});
-                widget.onSettingUpdate();
-              },
-              colorText: themeModeValue == 'light' ? darkColor : Colors.white,
-            ),
-            if (isLogin != null) ...[
-              listInMorePage(
-                context,
-                svgSignOut,
-                "signOut".tr,
-                heightFactor: 1.1,
-                colorText: redColor,
-                visibility: false,
-                onTap: signOutFunction,
-              ),
-            ],
+            _buildHeader(context),
+            const SizedBox(height: 10),
+            _buildMenuSection(context),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildHeader(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: isLogin == null ? _buildGuestHeader() : _buildUserHeader(),
+    );
+  }
+
+  Widget _buildGuestHeader() {
+    return Column(
+      children: [
+        Text(
+          'youAreNotRegisteredInTheApplication'.tr,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: textColor,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 20),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            widgetButton(
+              context,
+              'signIn'.tr,
+              colorText: Colors.white,
+              colorButton: greenColor,
+              width: Responsive.wp(context, 0.35),
+              onTap: () => Get.to(LoginUserName()),
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                'or'.tr,
+                style: TextStyle(color: textColor.withOpacity(0.6)),
+              ),
+            ),
+            Obx(
+              () => widgetButton(
+                context,
+                'createAnAccount'.tr,
+                colorText: Colors.white,
+                colorButton: greenColor,
+                width: Responsive.wp(context, 0.35),
+                onTap: () =>
+                    controller.getUserAccountTypes('numberPhone', true),
+                isProgress: controller.isProgress.value,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUserHeader() {
+    // Re-read fresh data from storage on every build
+    final freshLogin = readGetStorage(loginKey);
+
+    return InkWell(
+      onTap: () async {
+        await Get.to(() => const profileDetails());
+        // Refresh the page after returning from profile details
+        setState(() {
+          isLogin = readGetStorage(loginKey);
+        });
+      },
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: greenColor, width: 2),
+            ),
+            child: CircleAvatar(
+              radius: 35,
+              backgroundColor: Colors.grey.shade200,
+              backgroundImage: freshLogin?['Logo'] != null
+                  ? MemoryImage(base64.decode(freshLogin['Logo']))
+                  : AssetImage(pngCharacter) as ImageProvider,
+            ),
+          ),
+          const SizedBox(width: 15),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  language == "ar"
+                      ? "${freshLogin?['FirstNameAr'] ?? freshLogin?['FirstNameEn'] ?? ''} ${freshLogin?['LastNameAr'] ?? freshLogin?['LastNameEn'] ?? ''}"
+                      : "${freshLogin?['FirstNameEn'] ?? freshLogin?['FirstNameAr'] ?? ''} ${freshLogin?['LastNameEn'] ?? freshLogin?['LastNameAr'] ?? ''}",
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  "profileReview".tr,
+                  style: TextStyle(
+                    color: greenColor,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Icon(Icons.arrow_forward_ios, size: 16, color: arww),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMenuSection(BuildContext context) {
+    return Column(
+      children: [
+        _buildMenuItem(
+          svgMyRequests,
+          "myRequests".tr,
+          onTap: () {
+            isLogin == null
+                ? messagePleaseLogin()
+                : Get.to(
+                    GlobalWebView(
+                      '$webUrl$language/myorders/${isLogin['Web_UserID']}',
+                    ),
+                  );
+          },
+        ),
+        _buildMenuItem(
+          svgMyBookings,
+          "myBookings".tr,
+          onTap: () {
+            isLogin == null
+                ? messagePleaseLogin()
+                : Get.to(
+                    GlobalWebView(
+                      '$webUrl$language/maintenance-mycars/myReservation',
+                    ),
+                  );
+          },
+        ),
+        _buildMenuItem(
+          svgMaintenance,
+          "maintenance".tr,
+          onTap: () {
+            isLogin == null
+                ? messagePleaseLogin()
+                : Get.to(GlobalWebView('$webUrl$language/CustomerCar'));
+          },
+        ),
+        _buildMenuItem(
+          svgInformationAboutUs,
+          "informationAboutUs".tr,
+          onTap: () {
+            Get.to(GlobalWebView('$webUrl$language/about'));
+          },
+        ),
+        _buildMenuItem(
+          svgCallUs,
+          "callUs".tr,
+          onTap: () {
+            Get.to(GlobalWebView('$webUrl$language/contactus'));
+          },
+        ),
+        _buildMenuItem(
+          svgRecruitment,
+          "recruitment".tr,
+          onTap: () {
+            Get.to(GlobalWebView('$webUrl$language/jobs'));
+          },
+        ),
+        _buildMenuItem(
+          svgTips,
+          "advice".tr,
+          onTap: () {
+            Get.to(GlobalWebView('$webUrl$language/tips'));
+          },
+        ),
+        _buildMenuItem(
+          svgSettings,
+          "settings".tr,
+          onTap: () async {
+            await Get.to(const Settings());
+            setState(() {});
+            widget.onSettingUpdate();
+          },
+        ),
+        if (isLogin != null)
+          _buildMenuItem(
+            svgSignOut,
+            "signOut".tr,
+            colorText: redColor,
+            hideEndIcon: false,
+            onTap: signOutFunction,
+          ),
+      ],
+    );
+  }
+
+  Widget _buildMenuItem(
+    String iconPath,
+    String title, {
+    required VoidCallback onTap,
+    Color? colorText,
+    bool hideEndIcon = true,
+  }) {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      decoration: BoxDecoration(
+        color: surfaceColor,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        leading: SvgPicture.asset(iconPath, width: 24, height: 24),
+        title: Text(
+          title,
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: colorText ?? textColor,
+            fontSize: 15,
+          ),
+        ),
+        trailing: hideEndIcon
+            ? Icon(Icons.arrow_forward_ios, size: 14, color: arww)
+            : null,
       ),
     );
   }
@@ -405,54 +306,44 @@ class _MorePageState extends State<MorePage> {
   void signOutFunction() {
     Get.dialog(
       Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         backgroundColor: themeModeValue == 'light' ? Colors.white : darkColor,
-        child: Container(
-          alignment: Alignment.topCenter,
-          height: Responsive.hp(context, 0.18),
-          width: Responsive.wp(context, 0.8),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            mainAxisSize: MainAxisSize.min,
             children: [
+              const Icon(Icons.logout, color: Colors.red, size: 40),
+              const SizedBox(height: 16),
               widgetText(
                 context,
                 'signOut'.tr,
                 fontWeight: FontWeight.bold,
-                fontSize: Responsive.scaledFont(context, 16),
+                fontSize: 18,
               ),
+              const SizedBox(height: 24),
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
                 children: [
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
-                      onTap: () {
-                        Get.back();
-                      },
-                      child: Container(
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: themeModeValue == 'light'
-                              ? greyc
-                              : buttonDarkColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        width: Responsive.wp(context, 0.3),
-                        height: Responsive.hp(context, 0.04),
-                        child: widgetText(
-                          context,
-                          'cancel'.tr,
-                          color: themeModeValue == 'dark'
-                              ? Colors.white
-                              : darkColor,
-                          fontSize: Responsive.scaledFont(context, 14),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                  Expanded(
+                    child: widgetButton(
+                      context,
+                      'cancel'.tr,
+                      colorButton: themeModeValue == 'light'
+                          ? greyc
+                          : buttonDarkColor,
+                      colorText: themeModeValue == 'dark'
+                          ? Colors.white
+                          : darkColor,
+                      onTap: () => Get.back(),
                     ),
                   ),
-                  Material(
-                    color: Colors.transparent,
-                    child: InkWell(
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: widgetButton(
+                      context,
+                      'ok'.tr,
+                      colorButton: greenColor,
+                      colorText: Colors.white,
                       onTap: () async {
                         await removeGetStorage(loginKey);
                         Get.offAll(
@@ -463,22 +354,6 @@ class _MorePageState extends State<MorePage> {
                           ),
                         );
                       },
-                      child: Container(
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: greenColor,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        width: Responsive.wp(context, 0.3),
-                        height: Responsive.hp(context, 0.04),
-                        child: widgetText(
-                          context,
-                          'ok'.tr,
-                          color: Colors.white,
-                          fontSize: Responsive.scaledFont(context, 14),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
                     ),
                   ),
                 ],
@@ -490,82 +365,11 @@ class _MorePageState extends State<MorePage> {
     );
   }
 
-  Widget listInMorePage(
-    BuildContext context,
-    svgPicture,
-    String title, {
-    double heightFactor = 1.0,
-    var onTap,
-    bool hideEndIcon = true,
-    Color? colorText,
-    visibility,
-  }) {
-    final height = Responsive.height(context) * heightFactor;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          padding: EdgeInsets.only(
-            right: Responsive.wp(context, 0.02),
-            bottom: height * .022,
-            top: height * .022,
-          ),
-          decoration: BoxDecoration(
-            color: themeModeValue == 'light' ? Colors.white : darkColor,
-            border: Border(bottom: BorderSide(color: arww)),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                flex: 1,
-                child: Column(children: [SvgPicture.asset(svgPicture)]),
-              ),
-              Expanded(
-                flex: 6,
-                child: Column(
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: height * .02,
-                            color: colorText ?? darkColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              Visibility(
-                visible: visibility ?? true,
-                child: Expanded(
-                  flex: 1,
-                  child: Column(
-                    children: [
-                      Visibility(
-                        visible: hideEndIcon,
-                        child: Icon(
-                          Icons.arrow_forward_ios,
-                          color: arww,
-                          size: Responsive.wp(context, 0.04),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Future<bool?> messagePleaseLogin() {
-    return Fluttertoast.showToast(msg: 'pleaseSignIn'.tr);
+    return Fluttertoast.showToast(
+      msg: 'pleaseSignIn'.tr,
+      backgroundColor: Colors.black87,
+      textColor: Colors.white,
+    );
   }
 }

@@ -1,5 +1,4 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -18,477 +17,372 @@ class EditProfileDetails extends StatefulWidget {
 class _EditProfileDetailsState extends State<EditProfileDetails> {
   var controller = Get.put(ProfileController());
 
+  // --- UI DECORATION TOOLKIT (Matching Settings Page) ---
+  BoxDecoration _containerDecoration(bool isDark) {
+    return BoxDecoration(
+      color: isDark ? const Color(0xFF1E1E1E) : Colors.white,
+      borderRadius: BorderRadius.circular(24.0),
+      border: Border.all(color: const Color(0xFFDBDBDB).withOpacity(0.2)),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.03),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    bool isDark = themeModeValue == 'dark';
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: themeModeValue == 'dark' ? darkColor : Colors.white,
-
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: Icon(
             Icons.arrow_back_ios_sharp,
-            color: themeModeValue == 'light' ? darkColor : Colors.white,
+            color: isDark ? Colors.white : darkColor,
+            size: 18,
           ),
         ),
         title: widgetText(
           context,
           'editProfile'.tr,
-          color: themeModeValue == 'light' ? darkColor : Colors.white,
           fontWeight: FontWeight.bold,
         ),
         centerTitle: true,
         elevation: 0,
       ),
       body: SafeArea(
-        child: Container(
-          padding: EdgeInsets.symmetric(horizontal: Get.width * .05),
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-                SizedBox(height: Get.height * .02),
-                SizedBox(height: Get.height * .02),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: Get.width * .05,
+            vertical: 20,
+          ),
+          child: Column(
+            children: [
+              // SECTION: PROFILE IMAGE CARD
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                width: double.infinity,
+                decoration: _containerDecoration(isDark),
+                child: Column(
                   children: [
-                    Stack(
-                      alignment: Alignment.bottomRight,
+                    _buildAvatarStack(isDark),
+                    const SizedBox(height: 12),
+                    widgetText(
+                      context,
+                      'chooseAPhoto'.tr,
+                      fontSize: 13,
+                      color: greyColor2,
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              // SECTION: FORM FIELDS CARD
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: _containerDecoration(isDark),
+                child: Column(
+                  children: [
+                    // First & Middle Name Row
+                    Row(
                       children: [
-                        controller.imageProfileBase64 == null
-                            ? Container(
-                                width: Get.width * .3,
-                                height: Get.width * .3,
-                                decoration: const BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  image: DecorationImage(
-                                    fit: BoxFit.fill,
-                                    image: AssetImage(pngCharacter),
-                                  ),
-                                ),
-                              )
-                            : Container(
-                                width: Get.width * .3,
-                                height: Get.width * .3,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  image: DecorationImage(
-                                    fit: BoxFit.fill,
-                                    image: MemoryImage(
-                                      base64.decode(
-                                        controller.imageProfileBase64,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                        InkWell(
-                          onTap: () async {
-                            showDialogUploadImageFromGalleryOrCamera();
-                          },
-                          child: Padding(
-                            padding: EdgeInsets.only(
-                              bottom: Get.width * .03,
-                              right: Get.width * .03,
-                            ),
-                            child: Material(
-                              color: Colors.white,
-                              shape: CircleBorder(
-                                side: BorderSide(color: Colors.white),
-                              ),
-                              child: Padding(
-                                padding: EdgeInsets.all(Get.width * .01),
-                                child: Icon(
-                                  Icons.camera_alt,
-                                  color: themeModeValue == 'dark'
-                                      ? Colors.white
-                                      : darkColor,
-                                ),
-                              ),
-                            ),
+                        Expanded(
+                          child: widgetTextForm(
+                            context,
+                            controller: controller.controllerFistName,
+                            errorText: controller.validateFirstName.value
+                                ? 'pleaseEnterFirstName'.tr
+                                : null,
+                            onChanged: (v) {
+                              controller.validateFirstName.value = v.isEmpty;
+                              setState(() {});
+                            },
+                            hintText: 'firstName'.tr,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: widgetTextForm(
+                            context,
+                            controller: controller.controllerMiddleName,
+                            errorText: controller.validateMiddleName.value
+                                ? 'pleaseEnterMiddleName'.tr
+                                : null,
+                            onChanged: (v) {
+                              controller.validateMiddleName.value = v.isEmpty;
+                              setState(() {});
+                            },
+                            hintText: 'middleName'.tr,
                           ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-                SizedBox(height: Get.height * .07),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: Get.width * .43,
-                      child: widgetTextForm(
-                        context,
-                        controller: controller.controllerFistName,
-                        errorText: controller.validateFirstName.value
-                            ? 'pleaseEnterFirstName'.tr
-                            : null,
-                        onChanged: (v) {
-                          if (controller.controllerFistName.text.isEmpty) {
-                            controller.validateFirstName.value = true;
-                            setState(() {});
-                          } else if (controller
-                              .controllerFistName
-                              .text
-                              .isNotEmpty) {
-                            controller.validateFirstName.value = false;
-                            setState(() {});
-                          }
-                        },
-                        hintText: 'firstName'.tr,
-                      ),
-                    ),
-                    SizedBox(
-                      width: Get.width * .43,
-                      child: widgetTextForm(
-                        context,
-                        controller: controller.controllerMiddleName,
-                        errorText: controller.validateMiddleName.value
-                            ? 'pleaseEnterMiddleName'.tr
-                            : null,
-                        onChanged: (v) {
-                          if (controller.controllerMiddleName.text.isEmpty) {
-                            controller.validateMiddleName.value = true;
-                            setState(() {});
-                          } else if (controller
-                              .controllerMiddleName
-                              .text
-                              .isNotEmpty) {
-                            controller.validateMiddleName.value = false;
-                            setState(() {});
-                          }
-                        },
-                        hintText: 'middleName'.tr,
-                      ),
-                    ),
-                  ],
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    SizedBox(
-                      width: Get.width * .43,
-                      child: widgetTextForm(
-                        context,
-                        controller: controller.controllerGrandFatherName,
-                        errorText: controller.validateGrandFatherName.value
-                            ? 'pleaseEnterGrandfatherName'.tr
-                            : null,
-                        onChanged: (v) {
-                          if (controller
-                              .controllerGrandFatherName
-                              .text
-                              .isEmpty) {
-                            controller.validateGrandFatherName.value = true;
-                            setState(() {});
-                          } else if (controller
-                              .controllerGrandFatherName
-                              .text
-                              .isNotEmpty) {
-                            controller.validateGrandFatherName.value = false;
-                            setState(() {});
-                          }
-                        },
-                        hintText: 'grandfatherName'.tr,
-                      ),
-                    ),
-                    SizedBox(
-                      width: Get.width * .43,
-                      child: widgetTextForm(
-                        context,
-                        controller: controller.controllerLastName,
-                        errorText: controller.validateLastName.value
-                            ? 'pleaseEnterLastName'.tr
-                            : null,
-                        onChanged: (v) {
-                          if (controller.controllerLastName.text.isEmpty) {
-                            controller.validateLastName.value = true;
-                            setState(() {});
-                          } else if (controller
-                              .controllerLastName
-                              .text
-                              .isNotEmpty) {
-                            controller.validateLastName.value = false;
-                            setState(() {});
-                          }
-                        },
-                        hintText: 'lastName'.tr,
-                      ),
-                    ),
-                  ],
-                ),
-                widgetPhoneNumber(context),
-                Row(
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: widgetTextForm(
-                        context,
-                        controller: controller.controllerIdentityNumber,
-                        textInputType: TextInputType.number,
-                        errorText: controller.validateIDNumber.value
-                            ? 'pleaseEnterTheIDNumber'.tr
-                            : null,
-                        onChanged: (v) {
-                          if (controller.controllerIdentityNumber.text.length <
-                              10) {
-                            controller.validateIDNumber.value = true;
-                            setState(() {});
-                          } else if (controller
-                                  .controllerIdentityNumber
-                                  .text
-                                  .length >
-                              9) {
-                            controller.validateIDNumber.value = false;
-                            setState(() {});
-                          }
-                        },
-                        textDirection: TextDirection.ltr,
-                        inputFormatters: [LengthLimitingTextInputFormatter(10)],
-                        hintText: 'identificationNumber'.tr,
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Container(
-                        height: Get.height * .06,
-                        margin: EdgeInsets.only(
-                          bottom: Get.height * .015,
-                          left: Get.width * .01,
-                          right: Get.width * .01,
-                        ),
-                        decoration: const BoxDecoration(
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey,
-                              blurRadius: 5,
-                              spreadRadius: -2,
-                            ),
-                          ],
-                        ),
-                        child: InkWell(
-                          onTap: () {
-                            showDialogUploadImageFromGalleryOrCameraForIdentificationNumber();
-                          },
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: themeModeValue == 'light'
-                                  ? Colors.white
-                                  : buttonDarkColor,
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            child: Padding(
-                              padding: EdgeInsets.all(Get.width * .01),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child:
-                                        controller.imageidentityBase64 == null
-                                        ? widgetText(
-                                            context,
-                                            'insertPhotoID'.tr,
-                                            fontSize: Get.width * .025,
-                                          )
-                                        : widgetText(
-                                            context,
-                                            'editPhotoID'.tr,
-                                            fontSize: Get.width * .025,
-                                          ),
-                                  ),
-                                  Image.asset(pngInsertPhotoID),
-                                ],
-                              ),
-                            ),
+
+                    // Grandfather & Last Name Row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: widgetTextForm(
+                            context,
+                            controller: controller.controllerGrandFatherName,
+                            errorText: controller.validateGrandFatherName.value
+                                ? 'pleaseEnterGrandfatherName'.tr
+                                : null,
+                            onChanged: (v) {
+                              controller.validateGrandFatherName.value =
+                                  v.isEmpty;
+                              setState(() {});
+                            },
+                            hintText: 'grandfatherName'.tr,
                           ),
                         ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: widgetTextForm(
+                            context,
+                            controller: controller.controllerLastName,
+                            errorText: controller.validateLastName.value
+                                ? 'pleaseEnterLastName'.tr
+                                : null,
+                            onChanged: (v) {
+                              controller.validateLastName.value = v.isEmpty;
+                              setState(() {});
+                            },
+                            hintText: 'lastName'.tr,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    widgetPhoneNumber(context),
+
+                    // Identity Section
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          flex: 3,
+                          child: widgetTextForm(
+                            context,
+                            controller: controller.controllerIdentityNumber,
+                            textInputType: TextInputType.number,
+                            errorText: controller.validateIDNumber.value
+                                ? 'pleaseEnterTheIDNumber'.tr
+                                : null,
+                            onChanged: (v) {
+                              controller.validateIDNumber.value = v.length < 10;
+                              setState(() {});
+                            },
+                            textDirection: TextDirection.ltr,
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(10),
+                            ],
+                            hintText: 'identificationNumber'.tr,
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: _buildIdentityImageButton(isDark),
+                        ),
+                      ],
+                    ),
+
+                    widgetTextForm(
+                      context,
+                      controller: controller.controllerEmail,
+                      errorText: controller.validateEmail.value
+                          ? 'pleaseEnterTheEmail'.tr
+                          : null,
+                      onChanged: (v) {
+                        controller.validateEmail.value = !v.isEmail;
+                        setState(() {});
+                      },
+                      textDirection: TextDirection.ltr,
+                      hintText: 'email'.tr,
+                    ),
+
+                    widgetTextForm(
+                      context,
+                      controller: controller.controllerAddress,
+                      errorText: controller.validateTheAddress.value
+                          ? 'pleaseEnterTheAddress'.tr
+                          : null,
+                      onChanged: (v) {
+                        controller.validateTheAddress.value = v.isEmpty;
+                        setState(() {});
+                      },
+                      hintText: 'theAddress'.tr,
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Save Button
+                    Obx(
+                      () => widgetButton(
+                        context,
+                        'save'.tr,
+                        colorText: _isFormInvalid() ? darkColor : Colors.white,
+                        colorButton: _isFormInvalid()
+                            ? greyDarkColor
+                            : greenColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        width: double.infinity,
+                        isProgress: controller.isProgress.value,
+                        onTap: () {
+                          if (_isFormInvalid()) {
+                            _triggerValidations();
+                          } else {
+                            controller.isProgress.value = true;
+                            controller.updateProfile(
+                              firstName: controller.controllerFistName.text,
+                              middleName: controller.controllerMiddleName.text,
+                              grandFatherName:
+                                  controller.controllerGrandFatherName.text,
+                              lastName: controller.controllerLastName.text,
+                              logo: controller.imageProfileBase64.value,
+                              email: controller.controllerEmail.text,
+                              identificationNumber:
+                                  controller.controllerIdentityNumber.text,
+                              identityImage: controller.imageidentityBase64,
+                              address: controller.controllerAddress.text,
+                            );
+                          }
+                        },
                       ),
                     ),
                   ],
                 ),
-                widgetTextForm(
-                  context,
-                  controller: controller.controllerEmail,
-                  errorText: controller.validateEmail.value
-                      ? 'pleaseEnterTheEmail'.tr
-                      : null,
-                  onChanged: (v) {
-                    if (!controller.controllerEmail.text.isEmail) {
-                      controller.validateEmail.value = true;
-                      setState(() {});
-                    } else if (controller.controllerEmail.text.isEmail) {
-                      controller.validateEmail.value = false;
-                      setState(() {});
-                    }
-                  },
-                  textDirection: TextDirection.ltr,
-                  hintText: 'email'.tr,
-                ),
-                widgetTextForm(
-                  context,
-                  controller: controller.controllerAddress,
-                  errorText: controller.validateTheAddress.value
-                      ? 'pleaseEnterTheAddress'.tr
-                      : null,
-                  onChanged: (v) {
-                    if (controller.controllerAddress.text.isEmpty) {
-                      controller.validateTheAddress.value = true;
-                      setState(() {});
-                    } else if (controller.controllerAddress.text.isNotEmpty) {
-                      controller.validateTheAddress.value = false;
-                      setState(() {});
-                    }
-                  },
-                  hintText: 'theAddress'.tr,
-                ),
-                Obx(
-                  () => widgetButton(
-                    context,
-                    'save'.tr,
-                    colorText:
-                        (controller.controllerFistName.text.isEmpty ||
-                            controller.controllerMiddleName.text.isEmpty ||
-                            controller.controllerGrandFatherName.text.isEmpty ||
-                            controller.controllerLastName.text.isEmpty ||
-                            controller.controllerIdentityNumber.text.length <
-                                10 ||
-                            controller.controllerAddress.text.isEmpty)
-                        ? darkColor
-                        : Colors.white,
-                    colorButton:
-                        (controller.controllerFistName.text.isEmpty ||
-                            controller.controllerMiddleName.text.isEmpty ||
-                            controller.controllerGrandFatherName.text.isEmpty ||
-                            controller.controllerLastName.text.isEmpty ||
-                            controller.controllerIdentityNumber.text.length <
-                                10 ||
-                            controller.controllerAddress.text.isEmpty)
-                        ? greyDarkColor
-                        : greenColor,
-                    fontSize: Get.width * .035,
-                    fontWeight: FontWeight.bold,
-                    width: Get.width * .9,
-                    onTap: () {
-                      if (controller.controllerFistName.text.isEmpty ||
-                          controller.controllerMiddleName.text.isEmpty ||
-                          controller.controllerGrandFatherName.text.isEmpty ||
-                          controller.controllerLastName.text.isEmpty ||
-                          controller.controllerIdentityNumber.text.length <
-                              10 ||
-                          controller.controllerAddress.text.isEmpty) {
-                        if (controller.controllerFistName.text.isEmpty) {
-                          controller.validateFirstName.value = true;
-                          setState(() {});
-                        } else if (controller
-                            .controllerFistName
-                            .text
-                            .isNotEmpty) {
-                          controller.validateFirstName.value = false;
-                          setState(() {});
-                        }
-                        if (controller.controllerMiddleName.text.isEmpty) {
-                          controller.validateMiddleName.value = true;
-                          setState(() {});
-                        } else if (controller
-                            .controllerMiddleName
-                            .text
-                            .isNotEmpty) {
-                          controller.validateMiddleName.value = false;
-                          setState(() {});
-                        }
-                        if (controller.controllerGrandFatherName.text.isEmpty) {
-                          controller.validateGrandFatherName.value = true;
-                          setState(() {});
-                        } else if (controller
-                            .controllerGrandFatherName
-                            .text
-                            .isNotEmpty) {
-                          controller.validateGrandFatherName.value = false;
-                          setState(() {});
-                        }
-                        if (controller.controllerLastName.text.isEmpty) {
-                          controller.validateLastName.value = true;
-                          setState(() {});
-                        } else if (controller
-                            .controllerLastName
-                            .text
-                            .isNotEmpty) {
-                          controller.validateLastName.value = false;
-                          setState(() {});
-                        }
-                        if (controller.controllerIdentityNumber.text.length <
-                            10) {
-                          controller.validateIDNumber.value = true;
-                          setState(() {});
-                        } else if (controller
-                                .controllerIdentityNumber
-                                .text
-                                .length >
-                            9) {
-                          controller.validateIDNumber.value = false;
-                          setState(() {});
-                        }
-                        if (controller.controllerAddress.text.isEmpty) {
-                          controller.validateTheAddress.value = true;
-                          setState(() {});
-                        } else if (controller
-                            .controllerAddress
-                            .text
-                            .isNotEmpty) {
-                          controller.validateTheAddress.value = false;
-                          setState(() {});
-                        }
-                      } else {
-                        controller.isProgress.value = true;
-                        controller.updateProfile(
-                          firstName: controller.controllerFistName.text,
-                          middleName: controller.controllerMiddleName.text,
-                          grandFatherName:
-                              controller.controllerGrandFatherName.text,
-                          lastName: controller.controllerLastName.text,
-                          logo: controller.imageProfileBase64,
-                          email: controller.controllerEmail.text,
-                          identificationNumber:
-                              controller.controllerIdentityNumber.text,
-                          identityImage: controller.imageidentityBase64,
-                          address: controller.controllerAddress.text,
-                        );
-                      }
-                    },
-                    isProgress: controller.isProgress.value,
-                  ),
-                ),
-                SizedBox(height: Get.height * .05),
-              ],
-            ),
+              ),
+              const SizedBox(height: 40),
+            ],
           ),
         ),
       ),
     );
   }
 
-  Container widgetPhoneNumber(context) {
+  // --- UI HELPER: AVATAR STACK ---
+  Widget _buildAvatarStack(bool isDark) {
+    return Stack(
+      alignment: Alignment.bottomRight,
+      children: [
+        Container(
+          width: 110,
+          height: 110,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            border: Border.all(color: greenColor.withOpacity(0.2), width: 3),
+            image: DecorationImage(
+              fit: BoxFit.cover,
+              image: controller.imageProfileBase64.value == null
+                  ? AssetImage(pngCharacter) as ImageProvider
+                  : MemoryImage(
+                      base64.decode(controller.imageProfileBase64.value!),
+                    ),
+            ),
+          ),
+        ),
+        InkWell(
+          onTap: () => showDialogUploadImageFromGalleryOrCamera(),
+          child: CircleAvatar(
+            radius: 18,
+            backgroundColor: greenColor,
+            child: const Icon(Icons.camera_alt, size: 18, color: Colors.white),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // --- UI HELPER: IDENTITY BUTTON ---
+  Widget _buildIdentityImageButton(bool isDark) {
+    return InkWell(
+      onTap: () =>
+          showDialogUploadImageFromGalleryOrCameraForIdentificationNumber(),
+      child: Container(
+        height: 52, // Standard height to match text fields
+        decoration: BoxDecoration(
+          color: isDark ? buttonDarkColor : Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: greyColor.withOpacity(0.3)),
+          boxShadow: isDark
+              ? []
+              : [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.badge_outlined, size: 18, color: greenColor),
+            const SizedBox(width: 4),
+            widgetText(
+              context,
+              controller.imageidentityBase64 == null
+                  ? 'insertPhotoID'.tr
+                  : 'editPhotoID'.tr,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // --- FORM LOGIC (Keeping your original logic intact) ---
+  bool _isFormInvalid() {
+    return controller.controllerFistName.text.isEmpty ||
+        controller.controllerMiddleName.text.isEmpty ||
+        controller.controllerGrandFatherName.text.isEmpty ||
+        controller.controllerLastName.text.isEmpty ||
+        controller.controllerIdentityNumber.text.length < 10 ||
+        controller.controllerAddress.text.isEmpty;
+  }
+
+  void _triggerValidations() {
+    controller.validateFirstName.value =
+        controller.controllerFistName.text.isEmpty;
+    controller.validateMiddleName.value =
+        controller.controllerMiddleName.text.isEmpty;
+    controller.validateGrandFatherName.value =
+        controller.controllerGrandFatherName.text.isEmpty;
+    controller.validateLastName.value =
+        controller.controllerLastName.text.isEmpty;
+    controller.validateIDNumber.value =
+        controller.controllerIdentityNumber.text.length < 10;
+    controller.validateTheAddress.value =
+        controller.controllerAddress.text.isEmpty;
+    setState(() {});
+  }
+
+  Widget widgetPhoneNumber(context) {
     return Container(
-      margin: EdgeInsets.only(bottom: Get.height * .015),
+      margin: const EdgeInsets.only(bottom: 15, top: 5),
       decoration: BoxDecoration(
         color: themeModeValue == 'light' ? Colors.white : buttonDarkColor,
-        borderRadius: BorderRadius.circular(10.0),
+        borderRadius: BorderRadius.circular(12.0),
         border: Border.all(
-          color: themeModeValue == 'light' ? greyColor : Colors.transparent,
-          width: 1,
+          color: themeModeValue == 'light'
+              ? greyColor.withOpacity(0.3)
+              : Colors.transparent,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: themeModeValue == 'light'
-                ? Colors.grey.withAlpha((255 * 0.3).toInt())
-                : Colors.transparent,
-            spreadRadius: 2,
-            blurRadius: 7,
-            offset: Offset(0, 0), // changes position of shadow
-          ),
-        ],
       ),
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: Get.width * .05),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Directionality(
           textDirection: TextDirection.ltr,
           child: TextField(
@@ -497,198 +391,98 @@ class _EditProfileDetailsState extends State<EditProfileDetails> {
             readOnly: true,
             style: TextStyle(
               color: themeModeValue == 'dark' ? Colors.white : darkColor,
+              fontWeight: FontWeight.bold,
             ),
+            decoration: const InputDecoration(border: InputBorder.none),
           ),
         ),
       ),
     );
   }
 
+  // --- DIALOGS (Styled to match the new UI) ---
   Future showDialogUploadImageFromGalleryOrCamera() {
     return Get.dialog(
-      AlertDialog(
-        backgroundColor: themeModeValue == 'light' ? Colors.white : darkColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-        ),
-        contentPadding: EdgeInsets.only(top: 10.0),
-        content: Container(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              SizedBox(height: Get.height * .02),
-              widgetText(
-                context,
-                'chooseAPhoto'.tr,
-                fontSize: Get.width * .03,
-                fontWeight: FontWeight.bold,
-              ),
-              SizedBox(height: Get.height * .015),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  InkWell(
-                    onTap: () async {
-                      XFile? file = await ImagePicker().pickImage(
-                        source: ImageSource.camera,
-                      );
-                      Uint8List imagebytes = await file!.readAsBytes();
-                      controller.imageProfileBase64 = base64.encode(imagebytes);
-
-                      setState(() {});
-                      Get.back();
-                    },
-                    child: SvgPicture.asset(
-                      svgLogoCamera,
-                      height: Get.height * .055,
-                      semanticsLabel: 'Acme Logo',
-                    ),
-                  ),
-                  SizedBox(width: Get.width * .08),
-                  Container(
-                    margin: EdgeInsets.only(top: Get.height * .022),
-                    width: Get.width * .0008,
-                    height: Get.height * .02,
-                    color: greyColor3,
-                  ),
-                  SizedBox(width: Get.width * .08),
-                  InkWell(
-                    onTap: () async {
-                      XFile? file = await ImagePicker().pickImage(
-                        source: ImageSource.gallery,
-                      );
-                      Uint8List imagebytes = await file!.readAsBytes();
-                      controller.imageProfileBase64 = base64.encode(imagebytes);
-
-                      setState(() {});
-                      Get.back();
-                    },
-                    child: SvgPicture.asset(
-                      svgLogoLibrary,
-                      height: Get.height * .055,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: Get.height * .02),
-              Container(
-                width: Get.width * .48,
-                height: Get.height * .0006,
-                color: greyColor3,
-              ),
-              SizedBox(height: Get.height * .05),
-            ],
-          ),
-        ),
-      ),
+      _buildStyledImageDialog('chooseAPhoto'.tr, (base64Str) {
+        controller.imageProfileBase64.value = base64Str;
+        setState(() {});
+      }),
     );
   }
 
   Future showDialogUploadImageFromGalleryOrCameraForIdentificationNumber() {
     return Get.dialog(
-      AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-        ),
-        contentPadding: EdgeInsets.only(top: 10.0),
-        content: Container(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: <Widget>[
-              SizedBox(height: Get.height * .02),
-              controller.imageidentityBase64 == null
-                  ? widgetText(
-                      context,
-                      'chooseAPhoto'.tr,
-                      fontSize: Get.width * .025,
-                      fontWeight: FontWeight.bold,
-                    )
-                  : widgetText(
-                      context,
-                      'editAPhoto'.tr,
-                      fontSize: Get.width * .025,
-                      fontWeight: FontWeight.bold,
-                    ),
-              SizedBox(height: Get.height * .01),
-              controller.imageidentityBase64 == null
-                  ? Container()
-                  : Container(
-                      width: Get.width * .3,
-                      height: Get.width * .3,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        image: DecorationImage(
-                          fit: BoxFit.fill,
-                          image: MemoryImage(
-                            base64.decode(controller.imageidentityBase64),
-                          ),
-                        ),
-                      ),
-                    ),
-              SizedBox(height: Get.height * .01),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  InkWell(
-                    onTap: () async {
-                      XFile? file = await ImagePicker().pickImage(
-                        source: ImageSource.camera,
-                      );
-                      Uint8List imagebytes = await file!.readAsBytes();
-                      controller.imageidentityBase64 = base64.encode(
-                        imagebytes,
-                      );
-
-                      setState(() {});
-                      Get.back();
-                    },
-                    child: SvgPicture.asset(
-                      svgLogoCamera,
-                      height: Get.height * .055,
-                      semanticsLabel: 'Acme Logo',
-                    ),
-                  ),
-                  SizedBox(width: Get.width * .08),
-                  Container(
-                    margin: EdgeInsets.only(top: Get.height * .022),
-                    width: Get.width * .0008,
-                    height: Get.height * .02,
-                    color: greyColor3,
-                  ),
-                  SizedBox(width: Get.width * .08),
-                  InkWell(
-                    onTap: () async {
-                      XFile? file = await ImagePicker().pickImage(
-                        source: ImageSource.gallery,
-                      );
-                      Uint8List imagebytes = await file!.readAsBytes();
-                      controller.imageidentityBase64 = base64.encode(
-                        imagebytes,
-                      );
-
-                      setState(() {});
-                      Get.back();
-                    },
-                    child: SvgPicture.asset(
-                      svgLogoLibrary,
-                      height: Get.height * .055,
-                    ),
-                  ),
-                ],
-              ),
-              SizedBox(height: Get.height * .02),
-              Container(
-                width: Get.width * .48,
-                height: Get.height * .0006,
-                color: greyColor3,
-              ),
-              SizedBox(height: Get.height * .05),
-            ],
-          ),
-        ),
+      _buildStyledImageDialog(
+        controller.imageidentityBase64 == null
+            ? 'insertPhotoID'.tr
+            : 'editPhotoID'.tr,
+        (base64Str) {
+          controller.imageidentityBase64 = base64Str;
+          setState(() {});
+        },
+        previewImage: controller.imageidentityBase64,
       ),
     );
+  }
+
+  Widget _buildStyledImageDialog(
+    String title,
+    Function(String) onImageSelected, {
+    String? previewImage,
+  }) {
+    return AlertDialog(
+      backgroundColor: themeModeValue == 'light' ? Colors.white : darkColor,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(height: 10),
+          widgetText(context, title, fontWeight: FontWeight.bold),
+          if (previewImage != null) ...[
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.memory(
+                base64.decode(previewImage),
+                height: 120,
+                width: 120,
+                fit: BoxFit.cover,
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: [
+              _dialogOption(
+                svgLogoCamera,
+                () => _pickImage(ImageSource.camera, onImageSelected),
+              ),
+              _dialogOption(
+                svgLogoLibrary,
+                () => _pickImage(ImageSource.gallery, onImageSelected),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _dialogOption(String asset, VoidCallback onTap) {
+    return InkWell(onTap: onTap, child: SvgPicture.asset(asset, height: 50));
+  }
+
+  Future<void> _pickImage(
+    ImageSource source,
+    Function(String) onSelected,
+  ) async {
+    XFile? file = await ImagePicker().pickImage(source: source);
+    if (file != null) {
+      Uint8List bytes = await file.readAsBytes();
+      onSelected(base64.encode(bytes));
+      Get.back();
+    }
   }
 }

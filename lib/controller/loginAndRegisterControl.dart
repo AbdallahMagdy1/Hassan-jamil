@@ -294,55 +294,48 @@ class LoginAndRegisterControl extends GetxController {
     isProgress.value = true;
     var passwordAfterMd5 = textToMd5(password);
 
+    const webAdminUrl = "https://appw.hassanjameelapp.com/api/Administration/";
+
     var data = await myRequest(
-      url: details,
+      url: 'SignInValidate1',
       method: HttpMethod.post,
+      otherBaseUrl: webAdminUrl,
       body: {
-        "object": "web_users",
-        "option": "column",
-        "filters": "where Email = '$email'and Password ='$passwordAfterMd5'",
-        "objectsettings": {"metadata": false},
+        "AccessType": "Email",
+        "Access": email.trim().toLowerCase(),
+        "Password": passwordAfterMd5,
       },
     );
 
-    if (data['ApiObjectData'].isNotEmpty) {
-      writeGetStorage(loginKey, data['ApiObjectData'][0]);
+    if (data != null && data is Map && data.containsKey('ID')) {
+      // Success
+      writeGetStorage(loginKey, data);
       isProgress.value = false;
       validation.value = false;
-      getUserAccountTypes2();
+
+      // Update Token (keep existing logic)
       await myRequest(
         url: update,
         method: HttpMethod.put,
         body: {
           "Object": "web_users",
-          "filters": "where  Email = '$email' ",
+          "filters": "where Email = '$email' ", // Legacy filter for update
           "Values": {'Token': '$fcmToken'},
           "ObjectSettings": {"MetaData": false},
         },
       );
-      writeGetStorage(loginKey, data['ApiObjectData'][0]);
-      isProgress.value = false;
-      validation.value = false;
+
       getUserAccountTypes2();
-      await myRequest(
-        url: update,
-        method: HttpMethod.put,
-        body: {
-          "Object": "web_users",
-          "filters": "where  Email = '$email' ",
-          "Values": {'Token': '$fcmToken'},
-          "ObjectSettings": {"MetaData": false},
-        },
-      );
+
       // Journify - Track Login
       journifyController.trackLogin(method: 'email_password');
       Get.offAll(MainView());
-    }
-    if (data['ApiObjectData'].isEmpty) {
+    } else {
+      // Falure
       isProgress.value = false;
       validation.value = false;
       isPassWordNotCorrect.value = true;
-      // bottomSheetError(text: 'PleaseEnterAValidPassword'.tr);
+      // Note: Removed bottomSheetError call as per original code context, relying on reactive variables
     }
   }
 
@@ -353,22 +346,27 @@ class LoginAndRegisterControl extends GetxController {
   ) async {
     var passwordAfterMd5 = textToMd5(password);
     isProgress.value = true;
+
+    // MATCH WEB APP: Use SignInValidate1 AND Web Domain
+    const webAdminUrl = "https://appw.hassanjameelapp.com/api/Administration/";
+
     var data = await myRequest(
-      url: details,
+      url: 'SignInValidate1',
       method: HttpMethod.post,
+      otherBaseUrl: webAdminUrl,
       body: {
-        "object": "web_users",
-        "option": "column",
-        "filters":
-            "where IdentityNumber = '$identificationNumber'and Password ='$passwordAfterMd5'",
-        "objectsettings": {"metadata": false},
+        "AccessType": "IdentityNo",
+        "Access": identificationNumber,
+        "Password": passwordAfterMd5,
       },
     );
 
-    if (data['ApiObjectData'].isNotEmpty) {
-      writeGetStorage(loginKey, data['ApiObjectData'][0]);
+    if (data != null && data is Map && data.containsKey('ID')) {
+      writeGetStorage(loginKey, data);
       isProgress.value = false;
       validation.value = false;
+
+      // Update Token
       await myRequest(
         url: update,
         method: HttpMethod.put,
@@ -379,30 +377,16 @@ class LoginAndRegisterControl extends GetxController {
           "ObjectSettings": {"MetaData": false},
         },
       );
+
       getUserAccountTypes2();
-      await myRequest(
-        url: update,
-        method: HttpMethod.put,
-        body: {
-          "Object": "web_users",
-          "filters": "where  IdentityNumber = '$identificationNumber' ",
-          "Values": {'Token': '$fcmToken'},
-          "ObjectSettings": {"MetaData": false},
-        },
-      );
-      getUserAccountTypes2();
+
       // Journify - Track Login
-      journifyController.trackLogin(
-        method: 'biometric',
-      ); // Treating ID Number as generic/biometric for now, or use 'other'
+      journifyController.trackLogin(method: 'biometric');
       Get.offAll(MainView());
-    }
-    if (data['ApiObjectData'].isEmpty) {
+    } else {
       isProgress.value = false;
       validation.value = false;
       isPassWordNotCorrect.value = true;
-
-      // bottomSheetError(text: 'PleaseEnterAValidPassword'.tr);
     }
   }
 

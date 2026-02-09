@@ -16,8 +16,8 @@ class InitialBinding extends Bindings {
 
     Get.put<JournifyBridgeController>(
       JournifyBridgeController(
-        writeKey: "wk_test_38WNzjTQOQoj3KUruAm4QmOB7n1",
-        allowedHosts: {"localhost"},
+        writeKey: "wk_38WNzjTQOQoj3KUruAm4QmOB7n1",
+        allowedHosts: {"app.hassanjameelapp.com"},
       )..addPlugins(),
       permanent: true,
     );

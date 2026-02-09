@@ -22,6 +22,12 @@ class ThemeController extends GetxController {
         ),
         contentTextStyle: TextStyle(color: blackColor, fontSize: 16),
       ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        iconTheme: IconThemeData(color: blackColor),
+        elevation: 0,
+      ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: greenColor,
