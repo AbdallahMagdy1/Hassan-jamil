@@ -95,7 +95,7 @@ class _GlobalWebViewState extends State<GlobalWebView> {
                         ),
                         initialSettings: InAppWebViewSettings(
                           useShouldOverrideUrlLoading: true,
-                          cacheEnabled: false,
+                          cacheEnabled: true,
                           supportZoom: false,
                           verticalScrollBarEnabled: false,
                           horizontalScrollBarEnabled: false,
