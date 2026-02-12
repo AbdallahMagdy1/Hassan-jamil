@@ -99,10 +99,10 @@ Future<void> main() async {
     debugPrint('Pre-runApp init error: $e');
   }
 
-  SystemChrome.setEnabledSystemUIMode(
-    SystemUiMode.manual,
-    overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
-  );
+  // SystemChrome.setEnabledSystemUIMode(
+  //   SystemUiMode.manual,
+  //   overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
+  // );
 
   PackageInfo packageInfo = await PackageInfo.fromPlatform();
   String version = packageInfo.version;
