@@ -37,11 +37,14 @@ class _LoginUserName2State extends State<LoginUserName> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: themeModeValue == 'light'
-            ? Colors.white
-            : Color(0xFF39393d),
+        backgroundColor: themeModeValue == 'light' ? Colors.white : darkColor,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         leading: widget.isFromSplashScreen
-            ? SizedBox()
+            ? const SizedBox()
             : IconButton(
                 onPressed: () {
                   controller.validation.value = false;

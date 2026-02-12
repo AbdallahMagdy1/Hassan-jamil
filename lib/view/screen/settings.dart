@@ -22,6 +22,12 @@ class _Settings extends State<Settings> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: isDark ? darkColor : Colors.white,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: Icon(
@@ -32,7 +38,6 @@ class _Settings extends State<Settings> {
         ),
         title: widgetText(context, 'settings'.tr, fontWeight: FontWeight.bold),
         centerTitle: true,
-        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(

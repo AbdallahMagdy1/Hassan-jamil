@@ -35,6 +35,12 @@ class NotificationPageState extends State<NotificationPage> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: isDark ? darkColor : Colors.white,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: Icon(
@@ -49,7 +55,6 @@ class NotificationPageState extends State<NotificationPage> {
           fontWeight: FontWeight.bold,
         ),
         centerTitle: true,
-        elevation: 0,
       ),
       body: SafeArea(
         child: FutureBuilder(

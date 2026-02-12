@@ -110,6 +110,12 @@ isForMainFrame: ${error.isForMainFrame}
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: themeModeValue == 'dark' ? darkColor : Colors.white,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: Icon(
@@ -119,7 +125,6 @@ isForMainFrame: ${error.isForMainFrame}
           ),
         ),
         centerTitle: true,
-        elevation: 0,
       ),
       body: SafeArea(
         left: false,

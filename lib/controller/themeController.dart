@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hj_app/global/globalUI.dart';
@@ -9,6 +10,7 @@ class ThemeController extends GetxController {
       brightness: Brightness.light,
       useMaterial3: true,
       primaryColor: greenColor,
+
       scaffoldBackgroundColor: Colors.white,
       textTheme: _getTextTheme(Brightness.light),
       fontFamilyFallback: _getFallBackFontFamily(),
@@ -25,8 +27,17 @@ class ThemeController extends GetxController {
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
+        foregroundColor: Colors.transparent,
         iconTheme: IconThemeData(color: blackColor),
         elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.dark,
+          statusBarBrightness: Brightness.light,
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -42,7 +53,7 @@ class ThemeController extends GetxController {
       brightness: Brightness.dark,
       useMaterial3: true,
       primaryColor: greenColor,
-      scaffoldBackgroundColor: blackColor,
+      scaffoldBackgroundColor: Colors.transparent,
       textTheme: _getTextTheme(Brightness.dark),
       fontFamilyFallback: _getFallBackFontFamily(),
       textSelectionTheme: TextSelectionThemeData(cursorColor: greenColor),
@@ -55,9 +66,26 @@ class ThemeController extends GetxController {
         ),
         contentTextStyle: TextStyle(color: Colors.white, fontSize: 16),
       ),
+      appBarTheme: AppBarTheme(
+        backgroundColor: Colors.transparent,
+        foregroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        shadowColor: Colors.transparent,
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: Brightness.light,
+          statusBarBrightness: Brightness.dark,
+        ),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
+      ),
+
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          textStyle: TextStyle(color: Colors.white),
+          textStyle: const TextStyle(color: Colors.white),
         ),
       ),
     );

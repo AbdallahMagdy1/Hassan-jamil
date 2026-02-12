@@ -6,11 +6,11 @@ const webUrl = "https://app.hassanjameelapp.com/";
 const baseDomain = "appmb.hassanjameelapp.com";
 
 const baseUrl = "https://$baseDomain/Visualbase/api/";
-const baseUrlVisualbase = "https://appw.hassanjameelapp.com/Visualbase/api/";
+const baseUrlVisualbase = "https://appmb.hassanjameelapp.com/Visualbase/api/";
 const administrationUrl = "https://$baseDomain/api/Administration/";
 const backendUrl = "https://$baseDomain/";
 
-const baseUrlWeb = "https://appw.hassanjameelapp.com/api/";
+const baseUrlWeb = "https://appmb.hassanjameelapp.com/api/";
 
 const details = "details";
 const func = "func";

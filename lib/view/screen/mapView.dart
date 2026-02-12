@@ -57,7 +57,12 @@ class MapViewState extends State<MapView> {
 
     return Scaffold(
       appBar: AppBar(
-        elevation: 0.0,
+        backgroundColor: isDark ? darkColor : Colors.white,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: Icon(
@@ -76,16 +81,18 @@ class MapViewState extends State<MapView> {
       ),
       body: SafeArea(
         child: Obx(() {
-          bool isLoading = controller.lat.value.isEmpty || controller.finishGetData.value == false;
+          bool isLoading =
+              controller.lat.value.isEmpty ||
+              controller.finishGetData.value == false;
 
           return Container(
             width: double.infinity,
             height: double.infinity,
             padding: EdgeInsets.all(Get.width * .05),
             color: isDark ? Colors.black : Colors.grey[50],
-            child: isLoading 
-              ? _buildLoadingState(isDark) 
-              : _buildMapPlaceholder(context, isDark),
+            child: isLoading
+                ? _buildLoadingState(isDark)
+                : _buildMapPlaceholder(context, isDark),
           );
         }),
       ),
@@ -111,7 +118,7 @@ class MapViewState extends State<MapView> {
             ),
             const SizedBox(height: 20),
             widgetText(
-              context, 
+              context,
               'loading'.tr, // Or a custom "Detecting Location" key
               fontSize: 14,
               color: greyColor2,
@@ -124,7 +131,7 @@ class MapViewState extends State<MapView> {
 
   // --- MAP PLACEHOLDER UI (Card Styled) ---
   Widget _buildMapPlaceholder(BuildContext context, bool isDark) {
-    // This replicates the structure where the Map would be, 
+    // This replicates the structure where the Map would be,
     // wrapped in the standardized card look until the actual GoogleMap is uncommented.
     return Column(
       children: [
@@ -137,12 +144,15 @@ class MapViewState extends State<MapView> {
                 children: [
                   // Actual Map would go here:
                   // GoogleMap(...)
-                  
                   Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.map_rounded, size: 50, color: greenColor.withOpacity(0.5)),
+                        Icon(
+                          Icons.map_rounded,
+                          size: 50,
+                          color: greenColor.withOpacity(0.5),
+                        ),
                         const SizedBox(height: 16),
                         widgetText(
                           context,
@@ -176,7 +186,7 @@ class MapViewState extends State<MapView> {
               const SizedBox(width: 12),
               Expanded(
                 child: widgetText(
-                  context, 
+                  context,
                   'yourCurrentLocation'.tr,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -184,7 +194,7 @@ class MapViewState extends State<MapView> {
               ),
             ],
           ),
-        )
+        ),
       ],
     );
   }
@@ -234,12 +244,13 @@ class MapViewState extends State<MapView> {
 
     setState(() {});
 
-    positionStream = Geolocator.getPositionStream(locationSettings: locationSettings).listen((
-      Position position,
-    ) {
-      controller.long.value = position.longitude.toString();
-      controller.lat.value = position.latitude.toString();
-      setState(() {});
-    });
+    positionStream =
+        Geolocator.getPositionStream(locationSettings: locationSettings).listen(
+          (Position position) {
+            controller.long.value = position.longitude.toString();
+            controller.lat.value = position.latitude.toString();
+            setState(() {});
+          },
+        );
   }
 }

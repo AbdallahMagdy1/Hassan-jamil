@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:get/get.dart';
+import 'package:hj_app/controller/profileController.dart';
+import 'package:hj_app/global/globalUI.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../controller/profileController.dart';
-import '../../global/globalUI.dart';
 
 class profileDetails extends StatelessWidget {
   const profileDetails({super.key});
@@ -210,7 +210,7 @@ class profileDetails extends StatelessWidget {
       return 'clientType'.tr;
     }
     var group = controller.listUserAccountTypes
-        .where((e) => e.id == isLogin['CustGroupID'])
+        .where((e) => e.id == isLogin['CustGroupID']?.toString())
         .toList();
     if (group.isNotEmpty) {
       return language == 'ar' ? group[0].descriptionAr : group[0].descriptionEn;
@@ -474,6 +474,7 @@ class profileDetails extends StatelessWidget {
             colorButton: greenColor,
             colorText: Colors.white,
             onTap: () {
+              controller.reloadFormData(); // Ensure fields are fresh
               controller.isProgress.value = false; // Reset loading state
               controller.optionTap.value = 3;
             },

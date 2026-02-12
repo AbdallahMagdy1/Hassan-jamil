@@ -35,7 +35,7 @@ class InitialBinding extends Bindings {
 
         //todo: delete account function
         //check if account is deleted
-        if (isLogin != null) {
+        /*if (isLogin != null) {
           debugPrint('Check if account is deleted => ${isLogin.toString()}');
           profileController.deleteMyAccountFunction(
             isLogin['Email'],
@@ -44,7 +44,7 @@ class InitialBinding extends Bindings {
             isRedirect: true,
             justChecking: true,
           );
-        }
+        }*/
       } catch (e, st) {
         // If something goes wrong, keep the app alive and log the error.
         debugPrint('InitialBinding init error: $e\n$st');

@@ -37,6 +37,11 @@ class _MorePageState extends State<MorePage> {
       backgroundColor: scaffoldBg,
       appBar: AppBar(
         backgroundColor: scaffoldBg,
+        elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.1),
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+        ),
         title: Text(
           'more'.tr,
           style: TextStyle(
@@ -46,17 +51,19 @@ class _MorePageState extends State<MorePage> {
           ),
         ),
         centerTitle: true,
-        elevation: 0,
         iconTheme: IconThemeData(color: textColor),
       ),
       body: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        child: Column(
-          children: [
-            _buildHeader(context),
-            const SizedBox(height: 10),
-            _buildMenuSection(context),
-          ],
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          child: Column(
+            children: [
+              _buildHeader(context),
+              const SizedBox(height: 10),
+              _buildMenuSection(context),
+            ],
+          ),
         ),
       ),
     );

@@ -7,7 +7,6 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hj_app/app.dart';
-import 'package:hj_app/controller/journify_controller.dart';
 import 'package:hj_app/controller/locale_controller.dart';
 import 'package:hj_app/controller/themeController.dart';
 import 'package:hj_app/model/notification.dart';
@@ -99,6 +98,11 @@ Future<void> main() async {
   } catch (e) {
     debugPrint('Pre-runApp init error: $e');
   }
+
+  SystemChrome.setEnabledSystemUIMode(
+    SystemUiMode.manual,
+    overlays: [SystemUiOverlay.top, SystemUiOverlay.bottom],
+  );
 
   PackageInfo packageInfo = await PackageInfo.fromPlatform();
   String version = packageInfo.version;

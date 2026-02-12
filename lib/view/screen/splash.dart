@@ -179,7 +179,7 @@ class _SplashState extends State<Splash> with WidgetsBindingObserver {
               return SizedBox.expand(
                 child: SafeArea(
                   child: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       SizedBox(
                         width: double.infinity,

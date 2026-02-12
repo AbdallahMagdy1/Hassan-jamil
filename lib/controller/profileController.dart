@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:hj_app/controller/verificationController.dart';
+import 'package:hj_app/global/globalUI.dart';
+import 'package:hj_app/global/globalUrl.dart';
+import 'package:hj_app/global/queryModel.dart';
+import 'package:hj_app/model/getUserAccountTypes.dart';
+import 'package:hj_app/model/settings.dart';
 import 'package:hj_app/view/screen/globalWebView.dart';
+import 'package:hj_app/view/screen/profileDetails.dart';
 import 'package:hj_app/view/screen/splash.dart';
-import '../global/enumMethod.dart';
-import '../global/globalUI.dart';
-import '../global/globalUrl.dart';
-import '../global/queryModel.dart';
-import '../model/getUserAccountTypes.dart';
-import '../model/settings.dart';
-import '../view/screen/profileDetails.dart';
+import 'package:http/http.dart' as HttpMethod;
 
 class ProfileController extends GetxController {
   RxInt idGender = 1.obs;
@@ -116,36 +116,45 @@ class ProfileController extends GetxController {
     getSettings();
 
     // Initialize Arabic name fields
-    controllerFistName.text = isLogin['FirstNameAr'] ?? '';
-    controllerMiddleName.text = isLogin['MiddleNameAr'] ?? '';
-    controllerGrandFatherName.text = isLogin['GrandFatherNameAr'] ?? '';
-    controllerLastName.text = isLogin['LastNameAr'] ?? '';
+    controllerFistName.text = isLogin['FirstNameAr']?.toString() ?? '';
+    controllerMiddleName.text = isLogin['MiddleNameAr']?.toString() ?? '';
+    controllerGrandFatherName.text =
+        isLogin['GrandFatherNameAr']?.toString() ?? '';
+    controllerLastName.text = isLogin['LastNameAr']?.toString() ?? '';
 
     // Initialize English name fields
-    controllerFirstNameEn.text = isLogin['FirstNameEn'] ?? '';
-    controllerMiddleNameEn.text = isLogin['MiddleNameEn'] ?? '';
-    controllerGrandFatherNameEn.text = isLogin['GrandFatherNameEn'] ?? '';
-    controllerLastNameEn.text = isLogin['LastNameEn'] ?? '';
+    controllerFirstNameEn.text = isLogin['FirstNameEn']?.toString() ?? '';
+    controllerMiddleNameEn.text = isLogin['MiddleNameEn']?.toString() ?? '';
+    controllerGrandFatherNameEn.text =
+        isLogin['GrandFatherNameEn']?.toString() ?? '';
+    controllerLastNameEn.text = isLogin['LastNameEn']?.toString() ?? '';
 
     // Initialize other fields
-    controllerIdentityNumber.text = isLogin['IdentityNumber'] ?? '';
-    controllerCRNumber.text = isLogin['TradeNo'] ?? '';
-    controllerEmail.text = isLogin['Email'] ?? '';
-    controllerAddress.text = isLogin['Address'] ?? '';
-    controllerPhoneNumber.text = isLogin['Phone'] ?? '';
+    controllerIdentityNumber.text = isLogin['IdentityNumber']?.toString() ?? '';
+    controllerCRNumber.text = isLogin['TradeNo']?.toString() ?? '';
+    controllerEmail.text = isLogin['Email']?.toString() ?? '';
+    controllerAddress.text = isLogin['Address']?.toString() ?? '';
+    controllerPhoneNumber.text = isLogin['Phone']?.toString() ?? '';
 
     // Initialize images
-    imageProfileBase64.value = isLogin['Logo'];
-    identityImageBase64.value = isLogin['IdentityImage'] ?? '';
-    crImageBase64.value = isLogin['TradeNoImage'] ?? '';
+    imageProfileBase64.value = isLogin['Logo']?.toString();
+    identityImageBase64.value = isLogin['IdentityImage']?.toString() ?? '';
+    crImageBase64.value = isLogin['TradeNoImage']?.toString() ?? '';
     imageidentityBase64 =
-        isLogin['IdentityImage'] ?? ''; // Backward compatibility
+        isLogin['IdentityImage']?.toString() ?? ''; // Backward compatibility
 
     // Initialize IDs
-    countryID.value = isLogin['countryID'];
-    cityID.value = isLogin['cityID'];
-    custGroupID.value = isLogin['CustGroupID'];
-    idGender.value = isLogin['GenderID'] ?? 1;
+    var cID = isLogin['countryID'];
+    countryID.value = cID != null ? int.tryParse(cID.toString()) : null;
+
+    var ctID = isLogin['cityID'];
+    cityID.value = ctID != null ? int.tryParse(ctID.toString()) : null;
+
+    var cgID = isLogin['CustGroupID'];
+    custGroupID.value = cgID?.toString();
+
+    var gID = isLogin['GenderID'];
+    idGender.value = gID != null ? int.tryParse(gID.toString()) ?? 1 : 1;
 
     // Determine identity type based on account type
     if (custGroupID.value != null && listUserAccountTypes.isNotEmpty) {
@@ -508,25 +517,32 @@ class ProfileController extends GetxController {
       );
       String? cleanCRImage = _stripBase64Header(crImageBase64.value);
 
+      // MATCHING REACT KEYS EXACTLY
       var updateValues = {
-        // Arabic names
-        "FirstNameAr": controllerFistName.text,
-        "MiddleNameAr": controllerMiddleName.text,
-        "GrandFatherNameAr": controllerGrandFatherName.text,
-        "LastNameAr": controllerLastName.text,
+        // camelCase names (matches React)
+        "firstNameAr": controllerFistName.text,
+        "middleNameAr": controllerMiddleName.text,
+        "grandFatherNameAr":
+            controllerGrandFatherName.text, // Guessing camelCase logic
+        "lastNameAr": controllerLastName.text,
+
         // English names
-        "FirstNameEn": controllerFirstNameEn.text,
-        "MiddleNameEn": controllerMiddleNameEn.text,
-        "GrandFatherNameEn": controllerGrandFatherNameEn.text,
-        "LastNameEn": controllerLastNameEn.text,
-        // Other fields
+        "firstNameEn": controllerFirstNameEn.text,
+        "middleNameEn": controllerMiddleNameEn.text,
+        "grandFatherNameEn": controllerGrandFatherNameEn.text,
+        "lastNameEn": controllerLastNameEn.text,
+
+        // Other fields - React uses PascalCase for these:
         "Address": controllerAddress.text,
         "GenderID": idGender.value,
-        "CountryID": countryID.value,
-        "CityID": cityID.value,
-        "CustGroupID": custGroupID.value ?? isLogin['CustGroupID'],
-        // Always send Logo if available
         "Logo": cleanProfileImage,
+
+        // React uses camelCase for these:
+        "countryID": countryID.value,
+        "cityID": cityID.value,
+
+        "CustGroupID": custGroupID.value ?? isLogin['CustGroupID'],
+        // Identity/CR logic below
       };
 
       // Add identity or CR fields based on account type
@@ -549,11 +565,9 @@ class ProfileController extends GetxController {
       var data = await myRequest(
         url: update,
         otherBaseUrl: baseUrlVisualbase,
-
         method: HttpMethod.put,
         body: {
           "Object": "web_users",
-          // CRITICAL: Use GUID for updates to match Web App logic
           "Filters": "where GUID = '${isLogin['GUID']}'",
           "Values": updateValues,
         },
@@ -597,70 +611,65 @@ class ProfileController extends GetxController {
     if (freshData != null) {
       debugPrint("Raw Storage Data: $freshData");
 
+      // Helper to safely get string from map
+      String getStr(List<String> keys) {
+        for (var key in keys) {
+          if (freshData[key] != null) return freshData[key].toString();
+        }
+        return '';
+      }
+
       // 1. Arabic Names
-      controllerFistName.text =
-          freshData['FirstNameAr'] ?? freshData['firstNameAr'] ?? '';
-      controllerMiddleName.text =
-          freshData['MiddleNameAr'] ?? freshData['middleNameAr'] ?? '';
-      controllerGrandFatherName.text =
-          freshData['GrandFatherNameAr'] ??
-          freshData['grandFatherNameAr'] ??
-          '';
-      controllerLastName.text =
-          freshData['LastNameAr'] ?? freshData['lastNameAr'] ?? '';
+      controllerFistName.text = getStr(['FirstNameAr', 'firstNameAr']);
+      controllerMiddleName.text = getStr(['MiddleNameAr', 'middleNameAr']);
+      controllerGrandFatherName.text = getStr([
+        'GrandFatherNameAr',
+        'grandFatherNameAr',
+      ]);
+      controllerLastName.text = getStr(['LastNameAr', 'lastNameAr']);
 
       // 2. English Names
-      controllerFirstNameEn.text =
-          freshData['FirstNameEn'] ?? freshData['firstNameEn'] ?? '';
-      controllerMiddleNameEn.text =
-          freshData['MiddleNameEn'] ?? freshData['middleNameEn'] ?? '';
-      controllerGrandFatherNameEn.text =
-          freshData['GrandFatherNameEn'] ??
-          freshData['grandFatherNameEn'] ??
-          '';
-      controllerLastNameEn.text =
-          freshData['LastNameEn'] ?? freshData['lastNameEn'] ?? '';
+      controllerFirstNameEn.text = getStr(['FirstNameEn', 'firstNameEn']);
+      controllerMiddleNameEn.text = getStr(['MiddleNameEn', 'middleNameEn']);
+      controllerGrandFatherNameEn.text = getStr([
+        'GrandFatherNameEn',
+        'grandFatherNameEn',
+      ]);
+      controllerLastNameEn.text = getStr(['LastNameEn', 'lastNameEn']);
 
       // 3. Contact & Address
-      controllerEmail.text = freshData['Email'] ?? freshData['email'] ?? '';
-      controllerAddress.text =
-          freshData['Address'] ?? freshData['address'] ?? '';
-      controllerPhoneNumber.text =
-          freshData['Phone'] ?? freshData['phone'] ?? '';
+      controllerEmail.text = getStr(['Email', 'email']);
+      controllerAddress.text = getStr(['Address', 'address']);
+      controllerPhoneNumber.text = getStr(['Phone', 'phone']);
 
       // 4. Identity & CR
-      controllerIdentityNumber.text =
-          freshData['IdentityNumber'] ?? freshData['identity'] ?? '';
-      controllerCRNumber.text =
-          freshData['TradeNo'] ?? freshData['tradeNo'] ?? '';
+      controllerIdentityNumber.text = getStr(['IdentityNumber', 'identity']);
+      controllerCRNumber.text = getStr(['TradeNo', 'tradeNo', 'CR']);
 
       // 5. Images (Clean headers)
-      imageProfileBase64.value = _stripBase64Header(
-        freshData['Logo'] ?? freshData['logo'],
-      );
+      imageProfileBase64.value = _stripBase64Header(getStr(['Logo', 'logo']));
       identityImageBase64.value = _stripBase64Header(
-        freshData['IdentityImage'] ?? freshData['identityImage'],
+        getStr(['IdentityImage', 'identityImage']),
       );
       crImageBase64.value = _stripBase64Header(
-        freshData['TradeNoImage'] ?? freshData['tradeNoImage'],
+        getStr(['TradeNoImage', 'tradeNoImage', 'CRImage']),
       );
 
       // 6. Dropdown IDs (Handle both string and int formats from API)
       // Country
-      var cID = freshData['CountryID'] ?? freshData['countryID'];
-      countryID.value = cID != null ? int.tryParse(cID.toString()) : null;
+      String cIDStr = getStr(['CountryID', 'countryID', 'countryId']);
+      countryID.value = int.tryParse(cIDStr);
 
       // City
-      var ctID = freshData['CityID'] ?? freshData['cityID'];
-      cityID.value = ctID != null ? int.tryParse(ctID.toString()) : null;
+      String ctIDStr = getStr(['CityID', 'cityID', 'cityId']);
+      cityID.value = int.tryParse(ctIDStr);
 
       // Gender
-      var gID = freshData['GenderID'] ?? freshData['genderID'];
-      idGender.value = gID != null ? int.tryParse(gID.toString()) ?? 1 : 1;
+      String gIDStr = getStr(['GenderID', 'genderID', 'genderId']);
+      idGender.value = int.tryParse(gIDStr) ?? 1;
 
       // CustGroup
-      custGroupID.value = (freshData['CustGroupID'] ?? freshData['custGroupID'])
-          ?.toString();
+      custGroupID.value = getStr(['CustGroupID', 'custGroupID', 'custGroupId']);
 
       debugPrint(
         "Parsed IDs -> Country: ${countryID.value}, City: ${cityID.value}, Gender: ${idGender.value}",
@@ -673,7 +682,6 @@ class ProfileController extends GetxController {
         );
         if (selectedCountry.value != null) {
           filterCities(countryID.value!);
-
           // Now set City if exists in filtered list
           if (cityID.value != null) {
             selectedCity.value = filteredCities.firstWhereOrNull(

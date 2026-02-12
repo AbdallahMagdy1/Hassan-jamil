@@ -656,6 +656,12 @@ Widget logoInAppBar(context, isLogin) {
 
 AppBar appBar(context, {isLogin, title, bool isViewSearch = false}) {
   return AppBar(
+    backgroundColor: themeModeValue == 'light' ? Colors.white : darkColor,
+    elevation: 2,
+    shadowColor: Colors.black.withOpacity(0.1),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
+    ),
     title: widgetText(
       context,
       '$title'.tr,
@@ -684,7 +690,6 @@ AppBar appBar(context, {isLogin, title, bool isViewSearch = false}) {
       ),
       SizedBox(width: Get.width * .02),
     ],
-    elevation: 0.0,
   );
 }
 
@@ -693,7 +698,32 @@ AppBar appBarMainPage(context, {isLogin, title}) {
     // Remove leading to eliminate profile icon
     leading: null,
     automaticallyImplyLeading: false,
-
+    backgroundColor: Colors.transparent,
+    systemOverlayStyle: SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: themeModeValue == 'light'
+          ? Brightness.dark
+          : Brightness.light,
+      statusBarBrightness: themeModeValue == 'light'
+          ? Brightness.light
+          : Brightness.dark,
+    ),
+    foregroundColor: Colors.transparent,
+    elevation: 0,
+    scrolledUnderElevation: 0,
+    flexibleSpace: Container(
+      decoration: BoxDecoration(
+        color: themeModeValue == 'light' ? Colors.white : darkColor,
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+    ),
     // title: widgetText(context, '$title'.tr,
     //     color: themeModeValue == 'light' ? darkColor : Colors.white,
     //     fontWeight: FontWeight.bold),
@@ -732,7 +762,9 @@ AppBar appBarMainPage(context, {isLogin, title}) {
                   //     Uri.parse(
                   //         'https://www.google.com/maps/@${controller.lat.value},${controller.long.value},15.4746z'),
                   //     mode: LaunchMode.externalApplication);
-
+                  // launchUrl(
+                  //     Uri.parse('https://maps.app.goo.gl/cLMQJtZqzPovqvhg8'),
+                  //     mode: LaunchMode.externalApplication);
                   launchUrl(
                     Uri.parse('https://maps.app.goo.gl/cLMQJtZqzPovqvhg8'),
                     mode: LaunchMode.externalApplication,
@@ -764,7 +796,6 @@ AppBar appBarMainPage(context, {isLogin, title}) {
         ),
       ),
     ],
-    elevation: 0.0,
   );
 }
 
