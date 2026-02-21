@@ -279,16 +279,6 @@ class profileDetails extends StatelessWidget {
   }) {
     return InkWell(
       onTap: () {
-        if (intTap == -1) {
-          if (isLogin != null) {
-            controller.deleteMyAccountFunction(
-              isLogin['Email'] ?? '',
-              isLogin['Phone'] ?? '',
-              isLogin['IdentityNumber'] ?? '',
-            );
-          }
-          return;
-        }
         controller.optionTap.value = intTap;
       },
       child: Container(
@@ -331,6 +321,7 @@ class profileDetails extends StatelessWidget {
       if (tap == 4) return _editContactSection(context, controller);
       if (tap == 2) return _viewSecuritySection(context, controller);
       if (tap == 5) return _editSecuritySection(context, controller);
+      if (tap == -1) return _deleteAccountSection(context, isLogin, controller);
       return const SizedBox();
     });
   }
@@ -729,6 +720,60 @@ class profileDetails extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _deleteAccountSection(
+    BuildContext context,
+    dynamic isLogin,
+    ProfileController controller,
+  ) {
+    return Column(
+      children: [
+        const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 64),
+        const SizedBox(height: 16),
+        widgetText(
+          context,
+          'deleteAccountConfirmationTitle'.tr,
+          fontWeight: FontWeight.bold,
+          fontSize: 18,
+          color: Colors.red,
+        ),
+        const SizedBox(height: 12),
+        widgetText(
+          context,
+          'deleteAccountConfirmationMessage'.tr,
+          textAlign: TextAlign.center,
+          fontSize: 14,
+          color: greyColor2,
+        ),
+        const SizedBox(height: 32),
+        widgetButton(
+          context,
+          'deleteAnAccount'.tr,
+          colorButton: Colors.red,
+          colorText: Colors.white,
+          onTap: () {
+            if (isLogin != null) {
+              controller.deleteMyAccountFunction(
+                isLogin['Email'] ?? '',
+                isLogin['Phone'] ?? '',
+                isLogin['IdentityNumber'] ?? '',
+              );
+            }
+          },
+        ),
+        const SizedBox(height: 12),
+        widgetButton(
+          context,
+          'cancel'.tr,
+          colorButton: Colors.grey.withOpacity(0.2),
+          colorText: themeModeValue == 'dark' ? Colors.white : darkColor,
+          onTap: () {
+            controller.optionTap.value = 0;
+          },
+        ),
+      ],
     );
   }
 

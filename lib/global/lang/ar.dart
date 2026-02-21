@@ -161,4 +161,7 @@ const Map<String, String> ar = {
   'crImage': 'صورة السجل التجاري',
   'arabicNames': 'الأسماء بالعربية',
   'englishNames': 'الأسماء بالإنجليزية',
+  'deleteAccountConfirmationTitle': 'إجراء حذف الحساب نهائي',
+  'deleteAccountConfirmationMessage':
+      'هل أنت متأكد أنك تريد حذف حسابك؟ هذا الإجراء نهائي ولا يمكن التراجع عنه. سيتم إزالة جميع بياناتك من أنظمتنا.',
 };

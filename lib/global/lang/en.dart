@@ -164,4 +164,7 @@ const Map<String, String> en = {
   'crImage': 'CR Image',
   'arabicNames': 'Arabic Names',
   'englishNames': 'English Names',
+  'deleteAccountConfirmationTitle': 'Delete Account Permanent Action',
+  'deleteAccountConfirmationMessage':
+      'Are you sure you want to delete your account? This action is permanent and cannot be undone. All your data will be removed from our systems.',
 };

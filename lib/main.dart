@@ -14,6 +14,7 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'global/globalUI.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart';
+import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'high_importance_channel', // id
@@ -49,6 +50,17 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // App Tracking Transparency Request
+  try {
+    final status = await AppTrackingTransparency.trackingAuthorizationStatus;
+    if (status == TrackingStatus.notDetermined) {
+      await Future.delayed(const Duration(milliseconds: 1000));
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    }
+  } catch (e) {
+    debugPrint("AppTrackingTransparency error: $e");
+  }
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   FlutterError.onError = FirebaseCrashlytics.instance.recordFlutterFatalError;
