@@ -74,7 +74,9 @@ android {
          }
 
         debug {
-            signingConfig signingConfigs.debug
+            if(keystorePropertiesFile.exists()){
+                signingConfig signingConfigs.debug
+            }
         }
     }
 
