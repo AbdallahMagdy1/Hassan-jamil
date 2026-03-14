@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../controller/verificationController.dart';
 import '../../global/PinPut.dart';
 import '../../global/globalUI.dart';
+import 'package:otp_autofill/otp_autofill.dart';
 
 class VerificationRegistration extends StatefulWidget {
   final String phoneNumber;
@@ -25,7 +26,38 @@ class VerificationRegistration extends StatefulWidget {
 
 class _VerificationRegistrationState extends State<VerificationRegistration> {
   final VerificationControl control = Get.put(VerificationControl());
-  TextEditingController verificationCode = TextEditingController();
+  late OTPTextEditController verificationCode;
+  late OTPInteractor _otpInteractor;
+
+  @override
+  void initState() {
+    super.initState();
+    _initInteractor();
+    verificationCode = OTPTextEditController(
+      codeLength: 4,
+      onCodeReceive: (code) {
+        if (code.length > 3) {
+          control.validation.value = true;
+        }
+      },
+      otpInteractor: _otpInteractor,
+    )..startListenUserConsent(
+        (code) {
+          final exp = RegExp(r'(\d{4})');
+          return exp.stringMatch(code ?? '') ?? '';
+        },
+      );
+  }
+
+  Future<void> _initInteractor() async {
+    _otpInteractor = OTPInteractor();
+  }
+
+  @override
+  void dispose() {
+    verificationCode.stopListen();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

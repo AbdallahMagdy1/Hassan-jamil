@@ -117,7 +117,7 @@ class optionRegisterState extends State<optionRegister> {
                         hintText: 'numberPhone'.tr,
                         isFromSplashScreen: widget.isFromSplashScreen,
                         acrossPhoneNumber: true,
-                        inputFormatters: [LengthLimitingTextInputFormatter(9)],
+                        inputFormatters: [LengthLimitingTextInputFormatter(10)],
                       ),
                     );
                   },

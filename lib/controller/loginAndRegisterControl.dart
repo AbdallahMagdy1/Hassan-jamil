@@ -376,6 +376,9 @@ class LoginAndRegisterControl extends GetxController {
     phoneNumber,
     isFromSplashScreen,
   ) async {
+    if (phoneNumber != null && phoneNumber.toString().startsWith('0')) {
+      phoneNumber = phoneNumber.toString().replaceFirst('0', '');
+    }
     isProgress.value = true;
     var data = await myRequest(
       otherBaseUrl: administrationUrl,
@@ -560,6 +563,9 @@ class LoginAndRegisterControl extends GetxController {
     IdentityImage,
     TradeNoImage,
   }) async {
+    if (phone != null && phone.toString().startsWith('0')) {
+      phone = phone.toString().replaceFirst('0', '');
+    }
     var passwordAfterMd5 = textToMd5(password);
     isProgress.value = true;
     var data = await myRequest(

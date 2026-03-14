@@ -203,6 +203,28 @@ class _GlobalWebViewState extends State<GlobalWebView> {
                             },
                           );
 
+                          // Handler for General Navigation
+                          controller.addJavaScriptHandler(
+                            handlerName: 'navigation',
+                            callback: (args) {
+                              debugPrint(
+                                "Received navigation signal from React: $args",
+                              );
+                              if (args.isNotEmpty) {
+                                String path = args[0].toString();
+                                if (path == '/signup' || path == '/login') {
+                                  Get.snackbar(
+                                    "Alert",
+                                    language == 'ar'
+                                        ? " يرجى تسجيل الدخول لإستكمال العملية"
+                                        : " Please login to continue",
+                                  );
+                                  Get.to(const LoginUserName());
+                                }
+                              }
+                            },
+                          );
+
                           // Make the WebView visible as soon as it's created so we
                           // don't show a permanent white overlay if the page takes
                           // long or never fires onLoadStop on some iOS redirects.
