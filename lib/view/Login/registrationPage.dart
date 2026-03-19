@@ -66,8 +66,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: themeModeValue == 'dark' ? darkColor : Colors.white,
-
         leading: IconButton(
           onPressed: () => Get.back(),
           icon: Icon(
@@ -935,9 +933,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
         child: TextField(
           keyboardType: TextInputType.phone,
           controller: controller.controllerPhoneNumber,
-          inputFormatters: [
-            LengthLimitingTextInputFormatter(10),
-          ],
           style: TextStyle(
             color: themeModeValue == 'dark' ? Colors.white : darkColor,
           ),

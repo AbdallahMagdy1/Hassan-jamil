@@ -15,6 +15,9 @@ import 'global/globalUI.dart';
 import 'firebase_options.dart';
 import 'package:flutter/services.dart';
 import 'package:app_tracking_transparency/app_tracking_transparency.dart';
+import 'global/enumMethod.dart';
+import 'global/queryModel.dart';
+import 'global/globalUrl.dart';
 
 const AndroidNotificationChannel channel = AndroidNotificationChannel(
   'high_importance_channel', // id
@@ -32,14 +35,24 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   print("Background Message notification: ${message.notification}");
   print("Background Message notification: ${message.notification?.body}");
 
+  String? img =
+      message.data['imageUrl'] ??
+      message.data['image'] ??
+      message.data['ImageUrl'] ??
+      message.data['Image'];
+
   notificationAdd(
     NotificationClass(
       id: null,
-      titleEn: message.data['titleEn'] ?? '',
-      titleAr: message.data['titleAr'] ?? '',
-      bodyEn: message.data['bodyEn'] ?? '',
-      bodyAr: message.data['bodyAr'] ?? '',
+      titleEn: message.data['titleEn'] ?? message.notification?.title ?? '',
+      titleAr: message.data['titleAr'] ?? message.notification?.title ?? '',
+      bodyEn: message.data['bodyEn'] ?? message.notification?.body ?? '',
+      bodyAr: message.data['bodyAr'] ?? message.notification?.body ?? '',
       route: message.data['route'] ?? '',
+      imageUrl: img,
+      offerType: message.data['offerType'] ?? message.data['OfferType'],
+      slugAr: message.data['slugAr'] ?? message.data['SlugAr'],
+      slugEn: message.data['slugEn'] ?? message.data['SlugEn'],
       date: DateTime.now().toString(),
     ),
   );
@@ -50,6 +63,7 @@ Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await GetStorage.init();
 
   // App Tracking Transparency Request
   try {
@@ -80,7 +94,50 @@ Future<void> main() async {
     sound: true,
   );
 
-  await GetStorage.init();
+  // // Foreground Message Listener
+  // FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+  //   debugPrint(
+  //     "🔔 Foreground Message received: ${message.notification?.title}",
+  //   );
+  //   debugPrint("📦 Message Data: ${message.data}");
+
+  //   // Manual sync/add to history if needed
+  //   String? img =
+  //       message.data['imageUrl'] ??
+  //       message.data['image'] ??
+  //       message.data['ImageUrl'] ??
+  //       message.data['Image'];
+
+  //   notificationAdd(
+  //     NotificationClass(
+  //       id: null,
+  //       titleEn: message.data['titleEn'] ?? message.notification?.title ?? '',
+  //       titleAr: message.data['titleAr'] ?? message.notification?.title ?? '',
+  //       bodyEn: message.data['bodyEn'] ?? message.notification?.body ?? '',
+  //       bodyAr: message.data['bodyAr'] ?? message.notification?.body ?? '',
+  //       route: message.data['route'] ?? '',
+  //       imageUrl: img,
+  //       offerType: message.data['offerType'] ?? message.data['OfferType'],
+  //       slugAr: message.data['slugAr'] ?? message.data['SlugAr'],
+  //       slugEn: message.data['slugEn'] ?? message.data['SlugEn'],
+  //       date: DateTime.now().toString(),
+  //     ),
+  //   );
+  // });
+
+  // Listen for Token Refresh
+  FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+    fcmToken = newToken;
+    syncFcmToken();
+  });
+
+  // Initial Sync on Startup
+  FirebaseMessaging.instance.getToken().then((token) {
+    if (token != null) {
+      fcmToken = token;
+      syncFcmToken();
+    }
+  });
 
   // ByteData data =
   //     await PlatformAssetBundle().load('assets/ca/lets-encrypt-r3.pem');
@@ -136,4 +193,75 @@ Future<void> main() async {
 
 Future<void> getToken() async {
   fcmToken = await FirebaseMessaging.instance.getToken();
+  debugPrint("🔑 FCM Token Initialized: $fcmToken");
+  FirebaseMessaging.instance.subscribeToTopic("all");
+  debugPrint("📡 Subscribed to 'all' topic.");
+}
+
+/// Syncs the FCM Token with the backend using the 'update' API style.
+Future<void> syncFcmToken([Map<String, dynamic>? targetUserData]) async {
+  try {
+    String? currentToken = fcmToken;
+    if (currentToken == null) {
+      currentToken = await FirebaseMessaging.instance.getToken();
+      if (currentToken == null) {
+        debugPrint("⚠️ FCM Token is null. Sync aborted.");
+        return;
+      }
+      fcmToken = currentToken;
+    }
+
+    debugPrint("📱 Current FCM Token: $currentToken");
+
+    final storage = GetStorage();
+    String? lastSyncedToken = storage.read('lastSyncedFcmToken');
+
+    if (lastSyncedToken == currentToken) {
+      debugPrint("ℹ️ Token is not expired/refreshed (same as last sync).");
+    } else {
+      debugPrint("🆕 Token is new or refreshed.");
+    }
+
+    var userData = targetUserData ?? readGetStorage(loginKey);
+
+    if (userData == null) {
+      debugPrint(
+        "ℹ️ syncFcmToken skipped: No data found for key '$loginKey' in storage.",
+      );
+      return;
+    }
+
+    String? filter;
+    if (userData['Email'] != null) {
+      filter = "where Email = '${userData['Email']}'";
+    } else if (userData['Phone'] != null) {
+      filter = "where Phone = '${userData['Phone']}'";
+    } else if (userData['IdentityNumber'] != null) {
+      filter = "where IdentityNumber = '${userData['IdentityNumber']}'";
+    }
+
+    if (filter != null) {
+      var response = await myRequest(
+        url: update,
+        method: HttpMethod.put,
+        body: {
+          "Object": "web_users",
+          "Filters": filter,
+          "Values": {'Token': currentToken},
+          "ObjectSettings": {"MetaData": false},
+        },
+      );
+
+      if (response != null && response != false) {
+        debugPrint("✅ FCM Token UPDATED on server for $filter");
+        await storage.write('lastSyncedFcmToken', currentToken);
+      } else {
+        debugPrint("❌ Failed to update FCM Token on server for $filter");
+      }
+    } else {
+      debugPrint("⚠️ No valid user identification field found for FCM sync.");
+    }
+  } catch (e) {
+    debugPrint("❌ Error Syncing FCM Token: $e");
+  }
 }

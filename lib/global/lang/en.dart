@@ -97,6 +97,7 @@ const Map<String, String> en = {
   'theAddress': 'The Address',
   'verification': 'Verification',
   'emailAlreadyExists': 'Email Already Exists',
+  "phoneAlreadyExist": "Phone Number Already Exists",
   'editFile': 'Edit File',
   'iDNumberAlreadyExists': 'ID Number Already Exists',
   'pressBackAgainToExit': 'Press Back Again to Exit',

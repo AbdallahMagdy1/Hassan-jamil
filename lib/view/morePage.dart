@@ -7,6 +7,7 @@ import 'package:hj_app/global/globalUrl.dart';
 import 'package:hj_app/view/screen/profileDetails.dart';
 import 'package:hj_app/view/screen/settings.dart';
 import '../controller/loginAndRegisterControl.dart';
+import '../controller/registerControl.dart';
 import '../global/globalUI.dart';
 import '../global/responsive.dart';
 import 'Login/loginUserNameScreen.dart';
@@ -23,7 +24,8 @@ class MorePage extends StatefulWidget {
 
 class _MorePageState extends State<MorePage> {
   var isLogin = readGetStorage(loginKey);
-  final LoginAndRegisterControl controller = Get.put(LoginAndRegisterControl());
+  final LoginAndRegisterControl controller =
+      Get.find<LoginAndRegisterControl>();
 
   // Helper for Theme Colors
   Color get surfaceColor =>
@@ -119,9 +121,12 @@ class _MorePageState extends State<MorePage> {
                 colorText: Colors.white,
                 colorButton: greenColor,
                 width: Responsive.wp(context, 0.35),
-                onTap: () =>
-                    controller.getUserAccountTypes('numberPhone', true),
-                isProgress: controller.isProgress.value,
+                onTap: () => Get.find<RegisterControl>().getUserAccountTypes(
+                  'numberPhone',
+                  true,
+                ),
+                isProgress:
+                    Get.find<RegisterControl>().isProgressCreateAccount.value,
               ),
             ),
           ],

@@ -488,15 +488,21 @@ class _GlobalWebViewState extends State<GlobalWebView> {
                               ].contains(error.description)) {
                                 return;
                               }
-                              // Show a static error page to avoid a white/blank screen.
-                              // Also catch standard connection errors
-
-                              if (request.url.toString().contains(backendUrl)) {
-                                if (mounted) {
-                                  setState(() {
-                                    showErrorPage =
-                                        1; // Treat mostly as connection issues for now or 2
-                                  });
+                              // Show a static error page ONLY if the main frame fails.
+                              // Do not show an error for images/assets that timeout.
+                              if (request.isForMainFrame ?? false) {
+                                if (request.url.toString().contains(
+                                      backendUrl,
+                                    ) ||
+                                    request.url.toString().contains(
+                                      'hassanjameelapp.com',
+                                    ) ||
+                                    request.url.toString().contains(webUrl)) {
+                                  if (mounted) {
+                                    setState(() {
+                                      showErrorPage = 1;
+                                    });
+                                  }
                                 }
                               }
                             },

@@ -2,7 +2,7 @@ import 'package:app_tracking_transparency/app_tracking_transparency.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:hj_app/controller/loginAndRegisterControl.dart';
+import 'package:hj_app/controller/registerControl.dart';
 import 'package:hj_app/controller/settingController.dart';
 import 'package:hj_app/global/globalUI.dart';
 import 'package:hj_app/view/Login/loginUserNameScreen.dart';
@@ -19,9 +19,6 @@ class Splash extends StatefulWidget {
 }
 
 class _SplashState extends State<Splash> with WidgetsBindingObserver {
-  final LoginAndRegisterControl _loginAndRegisterControl = Get.put(
-    LoginAndRegisterControl(),
-  );
   final SettingController _settingController = Get.put(SettingController());
 
   VideoPlayerController? _controller;
@@ -321,7 +318,7 @@ class _SplashState extends State<Splash> with WidgetsBindingObserver {
                         ),
                         onPressed: () async {
                           await _disposeVideoController();
-                          await _loginAndRegisterControl.getUserAccountTypes(
+                          await Get.find<RegisterControl>().getUserAccountTypes(
                             'numberPhone'.tr,
                             false,
                           );

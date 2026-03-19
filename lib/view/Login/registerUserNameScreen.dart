@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../controller/loginAndRegisterControl.dart';
 import '../../global/globalUI.dart';
 import '../screen/mainView.dart';
-import 'loginUserNameScreen.dart';
+import 'loginUserNameScreen.dart' hide validateEmail;
 
 class RegisterUserName extends StatefulWidget {
   final String? hintText;

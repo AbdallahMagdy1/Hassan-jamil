@@ -189,7 +189,7 @@ class ProfileController extends GetxController {
       );
 
       // 3. Update cache and apply if successful
-      if (data != null) {
+      if (data != null && data != false && data is Map) {
         debugPrint("Fetched fresh settings from API");
 
         // Ensure data structure matches expected format
@@ -204,6 +204,8 @@ class ProfileController extends GetxController {
 
         // Apply
         _parseAndApplySettings(settingsData);
+      } else {
+        debugPrint("Failed to fetch fresh settings: data is $data");
       }
     } catch (e) {
       debugPrint("Error loading settings: $e");
@@ -419,7 +421,7 @@ class ProfileController extends GetxController {
         );
       }
 
-      if (data != null && data['MessageNo'] == '202100000000008') {
+      if (data != null && data != false && data is Map && data['MessageNo'] == '202100000000008') {
         var data2 = await myRequest(
           url: details,
           otherBaseUrl: baseUrlVisualbase,
@@ -432,6 +434,8 @@ class ProfileController extends GetxController {
           },
         );
         if (data2 != null &&
+            data2 != false &&
+            data2 is Map &&
             data2['ApiObjectData'] != null &&
             data2['ApiObjectData'].isNotEmpty) {
           writeGetStorage(loginKey, data2['ApiObjectData'][0]);
@@ -486,6 +490,8 @@ class ProfileController extends GetxController {
       );
 
       if (data != null &&
+          data != false &&
+          data is Map &&
           data['ApiObjectData'] != null &&
           data['ApiObjectData'].isNotEmpty) {
         // Update local storage
@@ -576,6 +582,8 @@ class ProfileController extends GetxController {
       debugPrint("Update Response: ${data?.toString()}");
 
       if (data != null &&
+          data != false &&
+          data is Map &&
           (data['MessageNo'] == '202100000000008' ||
               data['MessageNo'] == 202100000000008)) {
         debugPrint("Update successful, refreshing data...");
@@ -719,7 +727,7 @@ class ProfileController extends GetxController {
           "ObjectSettings": {"MetaData": false},
         },
       );
-      if (data != null && data['MessageNo'] == '202100000000008') {
+      if (data != null && data != false && data is Map && data['MessageNo'] == '202100000000008') {
         // Refresh user data
         var data2 = await myRequest(
           url: details,
@@ -734,6 +742,8 @@ class ProfileController extends GetxController {
           },
         );
         if (data2 != null &&
+            data2 != false &&
+            data2 is Map &&
             data2['ApiObjectData'] != null &&
             data2['ApiObjectData'].isNotEmpty) {
           writeGetStorage(loginKey, data2['ApiObjectData'][0]);
@@ -746,7 +756,7 @@ class ProfileController extends GetxController {
           optionTap.value = 2;
           Fluttertoast.showToast(msg: 'Password updated successfully');
         } else {
-          debugPrint("Error: Empty response when refreshing user data");
+          debugPrint("Error: Empty response or failure when refreshing user data");
           Fluttertoast.showToast(
             msg: 'Password updated but failed to refresh data',
           );
@@ -785,7 +795,7 @@ class ProfileController extends GetxController {
           "ObjectSettings": {"MetaData": false},
         },
       );
-      if (data != null && data['MessageNo'] == '202100000000008') {
+      if (data != null && data != false && data is Map && data['MessageNo'] == '202100000000008') {
         // Refresh user data
         var data2 = await myRequest(
           url: details,
@@ -800,6 +810,8 @@ class ProfileController extends GetxController {
           },
         );
         if (data2 != null &&
+            data2 != false &&
+            data2 is Map &&
             data2['ApiObjectData'] != null &&
             data2['ApiObjectData'].isNotEmpty) {
           writeGetStorage(loginKey, data2['ApiObjectData'][0]);
@@ -814,7 +826,7 @@ class ProfileController extends GetxController {
             msg: 'Contact information updated successfully',
           );
         } else {
-          debugPrint("Error: Empty response when refreshing user data");
+          debugPrint("Error: Empty response or failure when refreshing user data");
           Fluttertoast.showToast(
             msg: 'Update successful but failed to refresh data',
           );
@@ -845,7 +857,7 @@ class ProfileController extends GetxController {
           "ObjectSettings": {"MetaData": false},
         },
       );
-      if (data != null && data['MessageNo'] == '202100000000008') {
+      if (data != null && data != false && data is Map && data['MessageNo'] == '202100000000008') {
         // Refresh user data
         var data2 = await myRequest(
           url: details,
@@ -860,13 +872,15 @@ class ProfileController extends GetxController {
           },
         );
         if (data2 != null &&
+            data2 != false &&
+            data2 is Map &&
             data2['ApiObjectData'] != null &&
             data2['ApiObjectData'].isNotEmpty) {
           writeGetStorage(loginKey, data2['ApiObjectData'][0]);
           isLogin = readGetStorage(loginKey);
           Fluttertoast.showToast(msg: 'Profile image updated successfully');
         } else {
-          debugPrint("Error: Empty response when refreshing user data");
+          debugPrint("Error: Empty response or failure when refreshing user data");
           Fluttertoast.showToast(
             msg: 'Image uploaded but failed to refresh data',
           );

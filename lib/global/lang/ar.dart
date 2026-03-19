@@ -96,6 +96,7 @@ const Map<String, String> ar = {
   'theAddress': 'العنوان',
   'verification': 'تحقق',
   'emailAlreadyExists': 'البريد الإلكتروني موجود مسبقًا',
+  "phoneAlreadyExist": "رقم الهاتف موجود مسبقًا",
   'editFile': 'تعديل الملف',
   'iDNumberAlreadyExists': 'رقم الهوية  موجود مسبقًا',
   'pressBackAgainToExit': 'اضغط مرة أخرى للخروج',

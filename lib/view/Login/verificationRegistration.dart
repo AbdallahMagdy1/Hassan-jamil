@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../controller/verificationController.dart';
 import '../../global/PinPut.dart';
 import '../../global/globalUI.dart';
-import 'package:otp_autofill/otp_autofill.dart';
 
 class VerificationRegistration extends StatefulWidget {
   final String phoneNumber;
@@ -26,38 +25,7 @@ class VerificationRegistration extends StatefulWidget {
 
 class _VerificationRegistrationState extends State<VerificationRegistration> {
   final VerificationControl control = Get.put(VerificationControl());
-  late OTPTextEditController verificationCode;
-  late OTPInteractor _otpInteractor;
-
-  @override
-  void initState() {
-    super.initState();
-    _initInteractor();
-    verificationCode = OTPTextEditController(
-      codeLength: 4,
-      onCodeReceive: (code) {
-        if (code.length > 3) {
-          control.validation.value = true;
-        }
-      },
-      otpInteractor: _otpInteractor,
-    )..startListenUserConsent(
-        (code) {
-          final exp = RegExp(r'(\d{4})');
-          return exp.stringMatch(code ?? '') ?? '';
-        },
-      );
-  }
-
-  Future<void> _initInteractor() async {
-    _otpInteractor = OTPInteractor();
-  }
-
-  @override
-  void dispose() {
-    verificationCode.stopListen();
-    super.dispose();
-  }
+  TextEditingController verificationCode = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
@@ -231,6 +199,7 @@ class _VerificationRegistrationState extends State<VerificationRegistration> {
                         }
                       }
                     },
+                    isProgress: control.isProgress.value,
                   ),
                 ),
                 SizedBox(height: Get.height * .015),
@@ -249,10 +218,17 @@ class _VerificationRegistrationState extends State<VerificationRegistration> {
                           'resend'.tr,
                           fontSize: 14.0,
                           fontWeight: FontWeight.bold,
-                          color: blueColor,
+                          color: control.canResend.value
+                              ? blueColor
+                              : greyDarkColor,
                         ),
                         SizedBox(width: Get.width * .01),
-                        Icon(Icons.refresh),
+                        Icon(
+                          Icons.refresh,
+                          color: control.canResend.value
+                              ? blueColor
+                              : greyDarkColor,
+                        ),
                       ],
                     ),
                   ],

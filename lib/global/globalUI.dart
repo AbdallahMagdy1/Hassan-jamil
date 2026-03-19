@@ -7,10 +7,12 @@ import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:hj_app/controller/locale_controller.dart';
+import 'package:hj_app/controller/notification_controller.dart';
 import 'package:hj_app/global/globalUrl.dart';
 import 'package:hj_app/model/notification.dart';
 import 'package:hj_app/view/Login/loginUserNameScreen.dart';
 import 'package:hj_app/view/screen/mainView.dart';
+import 'package:hj_app/view/screen/notification.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../model/getUserAccountTypes.dart';
 import '../view/morePage.dart';
@@ -127,17 +129,36 @@ List<NotificationClass> notificationData() {
 }
 
 dynamic notificationDelete(int index) {
-  List<NotificationClass> notifications =
-      readGetStorage(keyNotifications) ?? [];
+  List<NotificationClass> notifications = notificationData();
   notifications.removeAt(index);
-  return writeGetStorage(keyNotifications, notifications);
+  var result = writeGetStorage(
+    keyNotifications,
+    notifications.map((e) => e.toJson()).toList(),
+  );
+
+  // Update badge count if controller is registered
+  if (Get.isRegistered<NotificationController>()) {
+    Get.find<NotificationController>().updateCount();
+  }
+
+  return result;
 }
 
 dynamic notificationAdd(NotificationClass noti) {
-  List<NotificationClass> notifications =
-      readGetStorage(keyNotifications) ?? [];
+  List<NotificationClass> notifications = notificationData();
   notifications.add(noti);
-  return writeGetStorage(keyNotifications, notifications);
+
+  var result = writeGetStorage(
+    keyNotifications,
+    notifications.map((e) => e.toJson()).toList(),
+  );
+
+  // Update badge count if controller is registered
+  if (Get.isRegistered<NotificationController>()) {
+    Get.find<NotificationController>().updateCount();
+  }
+
+  return result;
 }
 
 dynamic readGetStorage(String key) {
@@ -173,7 +194,7 @@ Text widgetText(
   );
 }
 
-StatelessWidget widgetButton(
+Widget widgetButton(
   context,
   text, {
   colorText,
@@ -185,44 +206,50 @@ StatelessWidget widgetButton(
   onTap,
   bool isProgress = false,
 }) {
-  return isProgress
-      ? Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: greenColor,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          width: width ?? Get.width * .3,
-          height: height ?? Get.height * .05,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: Get.height * .001),
-            child: SizedBox(
-              height: Get.height * .02,
-              width: Get.height * .02,
-              child: const CircularProgressIndicator(color: Colors.white),
-            ),
-          ),
-        )
-      : InkWell(
-          onTap: onTap,
-          child: Container(
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: colorButton ?? greyDarkColor,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            width: width ?? Get.width * .3,
-            height: height ?? Get.height * .05,
-            child: widgetText(
-              context,
-              text,
-              textAlign: TextAlign.center,
-              color: colorText,
-              fontSize: fontSize,
-              fontWeight: fontWeight,
-            ),
-          ),
-        );
+  return AnimatedContainer(
+    duration: const Duration(milliseconds: 300),
+    curve: Curves.easeInOut,
+    alignment: Alignment.center,
+    decoration: BoxDecoration(
+      color: isProgress ? greenColor : (colorButton ?? greyDarkColor),
+      borderRadius: BorderRadius.circular(10),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.1),
+          blurRadius: 5,
+          offset: const Offset(0, 2),
+        ),
+      ],
+    ),
+    width: width ?? Get.width * .3,
+    height: height ?? Get.height * .05,
+    child: Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: isProgress ? null : onTap,
+        borderRadius: BorderRadius.circular(10),
+        child: Center(
+          child: isProgress
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : widgetText(
+                  context,
+                  text,
+                  textAlign: TextAlign.center,
+                  color: colorText,
+                  fontSize: fontSize,
+                  fontWeight: fontWeight,
+                ),
+        ),
+      ),
+    ),
+  );
 }
 
 Container widgetTextForm(
@@ -489,7 +516,7 @@ Container widgetDropdownGetUserAccountTypes(
   );
 }
 
-StatelessWidget widgetLoginButton(
+Widget widgetLoginButton(
   context,
   String text, {
   onTap,
@@ -502,61 +529,54 @@ StatelessWidget widgetLoginButton(
   fontSize,
   widthButton,
 }) {
-  return isProgress
-      ? Container(
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            boxShadow: [
+  return Center(
+    child: AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+      width: isProgress ? 50 : (widthButton ?? Get.width * .9),
+      height: 50,
+      decoration: BoxDecoration(
+        color: isProgress ? greenColor : (backgroundColor ?? greyDarkColor),
+        borderRadius: BorderRadius.circular(isProgress ? 25 : 12),
+        boxShadow:
+            boxShadow ??
+            [
               BoxShadow(
-                color: Colors.grey.withAlpha((255 * 0.5).toInt()),
-                spreadRadius: 5,
-                blurRadius: 7,
-                offset: const Offset(0, 3), // changes position of shadow
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
-            color: greenColor,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          width: widthButton ?? Get.width * .9,
-          height: Get.height * .05,
-          child: Padding(
-            padding: EdgeInsets.symmetric(vertical: Get.height * .001),
-            child: SizedBox(
-              height: Get.height * .02,
-              width: Get.height * .02,
-              child: const CircularProgressIndicator(color: Colors.white),
-            ),
-          ),
-        )
-      : InkWell(
-          onTap: onTap,
-          child: Container(
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              boxShadow:
-                  boxShadow ??
-                  [
-                    BoxShadow(
-                      color: Colors.grey.withAlpha((255 * 0.3).toInt()),
-                      spreadRadius: 2,
-                      blurRadius: 7,
-                      offset: const Offset(0, 0), // changes position of shadow
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isProgress ? null : onTap,
+          borderRadius: BorderRadius.circular(isProgress ? 25 : 12),
+          child: Center(
+            child: isProgress
+                ? const SizedBox(
+                    height: 24,
+                    width: 24,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.5,
                     ),
-                  ],
-              color: backgroundColor ?? greyDarkColor,
-              borderRadius: BorderRadius.circular(10),
-            ),
-            width: Get.width * .9,
-            height: Get.height * .05,
-            child: widgetText(
-              context,
-              text.tr,
-              color: colorFont ?? Colors.white,
-              fontSize: Get.width * .04,
-              fontWeight: fontWeight ? FontWeight.bold : FontWeight.normal,
-            ),
+                  )
+                : widgetText(
+                    context,
+                    text.tr,
+                    color: colorFont ?? Colors.white,
+                    fontSize: fontSize ?? Get.width * .04,
+                    fontWeight: fontWeight
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                  ),
           ),
-        );
+        ),
+      ),
+    ),
+  );
 }
 
 Future errorDialog({
@@ -791,6 +811,58 @@ AppBar appBarMainPage(context, {isLogin, title}) {
                   ),
                 ),
               ),
+              Obx(() {
+                final count =
+                    Get.find<NotificationController>().notificationCount.value;
+                return Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        Get.to(const NotificationPage());
+                        // Optional: Clear count when page is opened
+                        // Get.find<NotificationController>().notificationCount.value = 0;
+                      },
+                      icon: SvgPicture.asset(
+                        svgAlarm,
+                        colorFilter: ColorFilter.mode(
+                          (themeModeValue == 'light'
+                              ? Colors.black
+                              : Colors.white),
+                          BlendMode.srcIn,
+                        ),
+                      ),
+                    ),
+                    if (count > 0)
+                      Positioned(
+                        right: 8,
+                        top: -1,
+                        child: Container(
+                          width: 20,
+                          height: 20,
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            color: Color(0xff23cc4f),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.white, width: 1.5),
+                          ),
+
+                          child: Center(
+                            child: Text(
+                              '$count',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                );
+              }),
             ],
           ),
         ),
@@ -945,15 +1017,11 @@ void splashLogic() {
   var isShowLoginPageAfterInstall = readGetStorage(isShowLoginPage);
   if (isShowLoginPageAfterInstall == null) {
     writeGetStorage(isShowLoginPage, true);
-    Get.offAll(LoginUserName(isFromSplashScreen: true));
-  } else {
-    StatefulWidget? lastPageNavigator;
-    var isLogin = readGetStorage(loginKey);
-    if (isLogin == null) {
-      lastPageNavigator = LoginUserName(isFromSplashScreen: true);
-    }
-    Get.offAll(MainView(lastPageNavigator: lastPageNavigator));
   }
+
+  // Go directly to MainView for everyone (Guest or Logged in)
+  // This prevents clearing the navigation stack if a notification deep link is pending.
+  Get.offAll(const MainView());
 }
 
 // Global utility to clear WebView cache
@@ -967,4 +1035,11 @@ Future<void> clearWebViewCache() async {
   } catch (e) {
     debugPrint('Error clearing WebView cache: $e');
   }
+}
+
+bool validateEmail(String value) {
+  var pattern =
+      r'^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$';
+  RegExp regex = RegExp(pattern);
+  return (!regex.hasMatch(value)) ? false : true;
 }

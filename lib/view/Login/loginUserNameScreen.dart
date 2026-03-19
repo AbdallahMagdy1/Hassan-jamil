@@ -24,10 +24,8 @@ class _LoginUserName2State extends State<LoginUserName> {
 
   @override
   void initState() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.isProgress.value = false;
-      controller.isProgressCreateAccount.value = false;
-    });
+    controller.isProgress.value = false;
+    controller.isProgressCreateAccount.value = false;
     super.initState();
   }
 
@@ -37,14 +35,11 @@ class _LoginUserName2State extends State<LoginUserName> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: themeModeValue == 'light' ? Colors.white : darkColor,
-        elevation: 2,
-        shadowColor: Colors.black.withOpacity(0.1),
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
-        ),
+        backgroundColor: themeModeValue == 'light'
+            ? Colors.white
+            : Color(0xFF39393d),
         leading: widget.isFromSplashScreen
-            ? const SizedBox()
+            ? SizedBox()
             : IconButton(
                 onPressed: () {
                   controller.validation.value = false;

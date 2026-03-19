@@ -20,11 +20,10 @@ class optionRegisterState extends State<optionRegister> {
 
   @override
   void initState() {
+    controller.isProgress.value = false;
+    controller.isProgress.value = false;
+    controller.isProgressCreateAccount.value = false;
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      controller.isProgress.value = false;
-      controller.isProgressCreateAccount.value = false;
-    });
   }
 
   @override
@@ -117,7 +116,7 @@ class optionRegisterState extends State<optionRegister> {
                         hintText: 'numberPhone'.tr,
                         isFromSplashScreen: widget.isFromSplashScreen,
                         acrossPhoneNumber: true,
-                        inputFormatters: [LengthLimitingTextInputFormatter(10)],
+                        inputFormatters: [LengthLimitingTextInputFormatter(9)],
                       ),
                     );
                   },
