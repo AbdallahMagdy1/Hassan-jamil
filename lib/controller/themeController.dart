@@ -53,7 +53,7 @@ class ThemeController extends GetxController {
       brightness: Brightness.dark,
       useMaterial3: true,
       primaryColor: greenColor,
-      scaffoldBackgroundColor: Colors.transparent,
+      scaffoldBackgroundColor: darkColor,
       textTheme: _getTextTheme(Brightness.dark),
       fontFamilyFallback: _getFallBackFontFamily(),
       textSelectionTheme: TextSelectionThemeData(cursorColor: greenColor),
@@ -67,7 +67,7 @@ class ThemeController extends GetxController {
         contentTextStyle: TextStyle(color: Colors.white, fontSize: 16),
       ),
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.transparent,
+        backgroundColor: darkColor,
         foregroundColor: Colors.transparent,
         surfaceTintColor: Colors.transparent,
         shadowColor: Colors.transparent,

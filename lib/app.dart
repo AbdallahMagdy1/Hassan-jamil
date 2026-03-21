@@ -272,6 +272,11 @@ class _MyAppState extends State<MyApp> {
         theme: themeController.lightTheme,
         darkTheme: themeController.darkTheme,
         themeMode: ThemeMode.system,
+        defaultTransition:
+            Transition.cupertino, // Smooth platform-friendly transition
+        transitionDuration: const Duration(
+          milliseconds: 500,
+        ), // Slightly slower for better experience
         translations: Translation(),
         locale: localeController.locale.value,
         fallbackLocale: const Locale('en'),
