@@ -311,7 +311,6 @@ class ProfileController extends GetxController {
     try {
       var data = await myRequest(
         url: func,
-        otherBaseUrl: baseUrlWeb,
         method: HttpMethod.post,
         body: {
           "Name": SiteNewEmailExisting,
@@ -378,7 +377,6 @@ class ProfileController extends GetxController {
       if (language == "ar") {
         data = await myRequest(
           url: update,
-          otherBaseUrl: baseUrlVisualbase,
           method: HttpMethod.put,
           body: {
             "Object": "web_users",
@@ -400,7 +398,6 @@ class ProfileController extends GetxController {
       } else {
         data = await myRequest(
           url: update,
-          otherBaseUrl: baseUrlVisualbase,
           method: HttpMethod.put,
           body: {
             "Object": "web_users",
@@ -424,7 +421,6 @@ class ProfileController extends GetxController {
       if (data != null && data != false && data is Map && data['MessageNo'] == '202100000000008') {
         var data2 = await myRequest(
           url: details,
-          otherBaseUrl: baseUrlVisualbase,
           method: HttpMethod.post,
           body: {
             "object": "web_users",
@@ -471,15 +467,9 @@ class ProfileController extends GetxController {
     try {
       debugPrint("Refreshing user data...");
 
-      // MATCH WEB APP: Use Web API URL for details to ensure correct Arabic data
-      // 'appmb' endpoint returns English names in Arabic fields sometimes.
-      const webBaseUrl = "https://appw.hassanjameelapp.com/Visualbase/api/";
-
       var data = await myRequest(
         url: details,
         method: HttpMethod.post,
-        otherBaseUrl: baseUrlVisualbase,
-
         body: {
           "object": "web_users",
 
@@ -570,7 +560,6 @@ class ProfileController extends GetxController {
 
       var data = await myRequest(
         url: update,
-        otherBaseUrl: baseUrlVisualbase,
         method: HttpMethod.put,
         body: {
           "Object": "web_users",
@@ -717,7 +706,6 @@ class ProfileController extends GetxController {
       var passwordAfterMd5 = textToMd5(controllerNewPassword.text);
       var data = await myRequest(
         url: update,
-        otherBaseUrl: baseUrlVisualbase,
 
         method: HttpMethod.put,
         body: {
@@ -731,7 +719,6 @@ class ProfileController extends GetxController {
         // Refresh user data
         var data2 = await myRequest(
           url: details,
-          otherBaseUrl: baseUrlVisualbase,
 
           method: HttpMethod.post,
           body: {
@@ -780,7 +767,6 @@ class ProfileController extends GetxController {
       isProgress.value = true;
       var data = await myRequest(
         url: update,
-        otherBaseUrl: baseUrlVisualbase,
 
         method: HttpMethod.put,
         body: {
@@ -799,7 +785,6 @@ class ProfileController extends GetxController {
         // Refresh user data
         var data2 = await myRequest(
           url: details,
-          otherBaseUrl: baseUrlVisualbase,
 
           method: HttpMethod.post,
           body: {
@@ -847,7 +832,6 @@ class ProfileController extends GetxController {
       isProgressImage.value = true;
       var data = await myRequest(
         url: update,
-        otherBaseUrl: baseUrlVisualbase,
 
         method: HttpMethod.put,
         body: {
@@ -861,7 +845,6 @@ class ProfileController extends GetxController {
         // Refresh user data
         var data2 = await myRequest(
           url: details,
-          otherBaseUrl: baseUrlVisualbase,
 
           method: HttpMethod.post,
           body: {

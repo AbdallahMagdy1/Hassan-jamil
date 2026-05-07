@@ -34,6 +34,64 @@ final Dio _dio =
         ),
       );
 
+// Translates a legacy VisualBase call (`url: func/details/update/add/delete`
+// + body with `name`/`Object`) into a call against the dedicated per-operation
+// endpoints in PagesController. Returns null if `url` isn't a legacy op,
+// in which case the caller passes through unchanged.
+({String url, Map<String, dynamic> body})? _rewriteLegacyVisualBase(
+  String url,
+  Map<String, dynamic> body,
+) {
+  String? endpointName;
+  Map<String, dynamic> newBody;
+
+  if (url == func) {
+    final name = body['name'] ?? body['Name'];
+    if (name == null) return null;
+    endpointName = name.toString();
+    final values = body['values'] ?? body['Values'];
+    newBody = values is Map
+        ? Map<String, dynamic>.from(values as Map)
+        : <String, dynamic>{};
+  } else if (url == details ||
+      url == update ||
+      url == 'add' ||
+      url == 'delete') {
+    final obj = body['Object'] ?? body['object'];
+    if (obj == null) return null;
+    final prefix = url == details
+        ? 'Details'
+        : url == update
+            ? 'Update'
+            : url == 'add'
+                ? 'Add'
+                : 'Delete';
+    endpointName = '$prefix$obj';
+    newBody = Map<String, dynamic>.from(body)
+      ..remove('Object')
+      ..remove('object');
+    if (newBody.containsKey('values')) {
+      newBody['Values'] = newBody.remove('values');
+    }
+    if (newBody.containsKey('filters')) {
+      newBody['Filters'] = newBody.remove('filters');
+    }
+    if (newBody.containsKey('fields')) {
+      newBody['Fields'] = newBody.remove('fields');
+    }
+    if (newBody.containsKey('option')) {
+      newBody['Option'] = newBody.remove('option');
+    }
+    if (newBody.containsKey('objectsettings')) {
+      newBody['ObjectSettings'] = newBody.remove('objectsettings');
+    }
+  } else {
+    return null;
+  }
+
+  return (url: '${getLanguage()}/api/Pages/$endpointName', body: newBody);
+}
+
 Future myRequest({
   var method,
   var url,
@@ -45,7 +103,22 @@ Future myRequest({
   bool returnHeader = false,
 }) async {
   try {
-    var requestUri = (otherBaseUrl ?? baseUrl) + url;
+    // If the call is a legacy VisualBase op against the default Visualbase
+    // base URL, rewrite it to a dedicated PagesController endpoint and force
+    // POST. Calls that pass `otherBaseUrl` (administrationUrl, baseUrlWeb,
+    // etc.) keep their original routing.
+    var effectiveBase = otherBaseUrl ?? baseUrl;
+    if (effectiveBase == baseUrl) {
+      final rewrite = _rewriteLegacyVisualBase(url.toString(), body);
+      if (rewrite != null) {
+        url = rewrite.url;
+        body = rewrite.body;
+        method = HttpMethod.post;
+        effectiveBase = backendUrl;
+      }
+    }
+
+    var requestUri = effectiveBase + url;
     var isLogin = readGetStorage(loginKey);
     var passWord = readGetStorage(passWordKey);
 
@@ -158,9 +231,6 @@ Future myRequest({
         if (result.statusCode == 200) {
           if (returnHeader) {
             return [true, convertedData['set-cookie']];
-          }
-          if (url == update) {
-            return {'MessageNo': '202100000000008'};
           }
           var data = safeDecodeGeneral(result);
           return data;

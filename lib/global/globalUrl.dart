@@ -1,12 +1,15 @@
-// const webUrl = "http://localhost:3000/";
-const webUrl = "https://app.hassanjameelapp.com/";
+const webUrl = "http://localhost:3000/";
+// const webUrl = "https://app.hassanjameelapp.com/";
 // const webUrl = "https://fascinating-crumble-7b5594.netlify.app/";
 
 // const baseDomain = "test.hassanjameelapp.com";
 const baseDomain = "appmb.hassanjameelapp.com";
 
-const baseUrl = "https://$baseDomain/Visualbase/api/";
-const baseUrlVisualbase = "https://appmb.hassanjameelapp.com/Visualbase/api/";
+// Legacy sentinel kept so that `myRequest` can detect "default Visualbase
+// call" and route it through the dedicated PagesController endpoints. Its
+// value never reaches the network — every legacy op is rewritten to
+// `<lang>/api/Pages/<Name>` against `backendUrl` before the HTTP call fires.
+const baseUrl = "_legacy_visualbase_";
 const administrationUrl = "https://$baseDomain/api/Administration/";
 const backendUrl = "https://$baseDomain/";
 
