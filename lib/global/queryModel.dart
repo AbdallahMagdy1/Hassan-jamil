@@ -34,63 +34,14 @@ final Dio _dio =
         ),
       );
 
-// Translates a legacy VisualBase call (`url: func/details/update/add/delete`
-// + body with `name`/`Object`) into a call against the dedicated per-operation
-// endpoints in PagesController. Returns null if `url` isn't a legacy op,
-// in which case the caller passes through unchanged.
-({String url, Map<String, dynamic> body})? _rewriteLegacyVisualBase(
-  String url,
-  Map<String, dynamic> body,
-) {
-  String? endpointName;
-  Map<String, dynamic> newBody;
-
-  if (url == func) {
-    final name = body['name'] ?? body['Name'];
-    if (name == null) return null;
-    endpointName = name.toString();
-    final values = body['values'] ?? body['Values'];
-    newBody = values is Map
-        ? Map<String, dynamic>.from(values as Map)
-        : <String, dynamic>{};
-  } else if (url == details ||
-      url == update ||
-      url == 'add' ||
-      url == 'delete') {
-    final obj = body['Object'] ?? body['object'];
-    if (obj == null) return null;
-    final prefix = url == details
-        ? 'Details'
-        : url == update
-            ? 'Update'
-            : url == 'add'
-                ? 'Add'
-                : 'Delete';
-    endpointName = '$prefix$obj';
-    newBody = Map<String, dynamic>.from(body)
-      ..remove('Object')
-      ..remove('object');
-    if (newBody.containsKey('values')) {
-      newBody['Values'] = newBody.remove('values');
-    }
-    if (newBody.containsKey('filters')) {
-      newBody['Filters'] = newBody.remove('filters');
-    }
-    if (newBody.containsKey('fields')) {
-      newBody['Fields'] = newBody.remove('fields');
-    }
-    if (newBody.containsKey('option')) {
-      newBody['Option'] = newBody.remove('option');
-    }
-    if (newBody.containsKey('objectsettings')) {
-      newBody['ObjectSettings'] = newBody.remove('objectsettings');
-    }
-  } else {
-    return null;
-  }
-
-  return (url: '${getLanguage()}/api/Pages/$endpointName', body: newBody);
-}
+// Set by `myRequest` when the last call failed because of a network-layer
+// problem (TCP timeout, DNS failure, socket reset, etc.) — i.e. we never got
+// an HTTP status back at all. Callers should check this flag before
+// interpreting a `false` return as "backend explicitly said no" (e.g. so a
+// sign-in screen shows "network error" instead of "phone not found" after a
+// 3-minute timeout against an unreachable server). Reset at the start of
+// every call.
+bool lastRequestNetworkFailed = false;
 
 Future myRequest({
   var method,
@@ -102,23 +53,19 @@ Future myRequest({
   var otherBaseUrl,
   bool returnHeader = false,
 }) async {
+  lastRequestNetworkFailed = false;
   try {
-    // If the call is a legacy VisualBase op against the default Visualbase
-    // base URL, rewrite it to a dedicated PagesController endpoint and force
-    // POST. Calls that pass `otherBaseUrl` (administrationUrl, baseUrlWeb,
-    // etc.) keep their original routing.
-    var effectiveBase = otherBaseUrl ?? baseUrl;
-    if (effectiveBase == baseUrl) {
-      final rewrite = _rewriteLegacyVisualBase(url.toString(), body);
-      if (rewrite != null) {
-        url = rewrite.url;
-        body = rewrite.body;
-        method = HttpMethod.post;
-        effectiveBase = backendUrl;
-      }
-    }
-
+    // Default routing: relative URLs like `api/Pages/X` and `api/SadadPages/X`
+    // are resolved against the lang-prefixed backend root. Pass `otherBaseUrl`
+    // to override (administrationUrl, baseUrlWeb, absolute URL, etc.).
+    // Reads `language` (set by getLanguage() at app init) instead of calling
+    // getLanguage() per request — that helper has Get.find side effects.
+    final lang = language.isNotEmpty ? language : 'ar';
+    var effectiveBase = otherBaseUrl ?? '$backendUrl$lang/';
     var requestUri = effectiveBase + url;
+    if (kDebugMode) {
+      print('🌐 myRequest → $method $requestUri');
+    }
     var isLogin = readGetStorage(loginKey);
     var passWord = readGetStorage(passWordKey);
 
@@ -215,6 +162,7 @@ Future myRequest({
               body: data != null ? data['EnDescription'] : '',
             );
           }
+          return false;
         } else if (result.statusCode == 400) {
           var data = safeDecodeGeneral(result);
           if (returnHeader) {
@@ -224,6 +172,12 @@ Future myRequest({
         } else if (result.statusCode == 201) {
           return result.statusCode;
         }
+        if (kDebugMode) {
+          print(
+            '⚠️ myRequest unexpected ${result.statusCode} on $requestUri body=${result.data}',
+          );
+        }
+        return false;
       } else if (method == HttpMethod.put) {
         result = await _dio.put(requestUri, data: body, options: options);
         var convertedData = convertHeaders(result.headers);
@@ -250,6 +204,7 @@ Future myRequest({
               body: data != null ? data['EnDescription'] : '',
             );
           }
+          return false;
         } else if (result.statusCode == 400) {
           var data = safeDecodeGeneral(result);
           if (returnHeader) {
@@ -259,6 +214,12 @@ Future myRequest({
         } else if (result.statusCode == 201) {
           return result.statusCode;
         }
+        if (kDebugMode) {
+          print(
+            '⚠️ myRequest unexpected ${result.statusCode} on $requestUri body=${result.data}',
+          );
+        }
+        return false;
       } else if (method == HttpMethod.get) {
         result = await _dio.get(requestUri, options: options);
         var convertedData = convertHeaders(result.headers);
@@ -285,6 +246,7 @@ Future myRequest({
               body: data != null ? data['EnDescription'] : '',
             );
           }
+          return false;
         } else if (result.statusCode == 400) {
           var data = safeDecodeGeneral(result);
           if (returnHeader) {
@@ -294,11 +256,27 @@ Future myRequest({
         } else if (result.statusCode == 201) {
           return result.statusCode;
         }
+        if (kDebugMode) {
+          print(
+            '⚠️ myRequest unexpected ${result.statusCode} on $requestUri body=${result.data}',
+          );
+        }
+        return false;
+      } else {
+        if (kDebugMode) {
+          print(
+            '⚠️ myRequest: unsupported method=$method (expected HttpMethod enum). Returning false.',
+          );
+        }
+        return false;
       }
     } else {
       errorDialog(title: 'NO_INTERNET'.tr, body: 'CHECK_INTERNET'.tr);
     }
   } catch (e) {
+    if (e is DioException) {
+      lastRequestNetworkFailed = true;
+    }
     if (kDebugMode) {
       print("❌ myRequest error: $e");
     }

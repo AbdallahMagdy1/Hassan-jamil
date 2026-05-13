@@ -242,13 +242,11 @@ Future<void> syncFcmToken([Map<String, dynamic>? targetUserData]) async {
 
     if (filter != null) {
       var response = await myRequest(
-        url: update,
-        method: HttpMethod.put,
+        url: 'api/Pages/Updateweb_users',
+        method: HttpMethod.post,
         body: {
-          "Object": "web_users",
           "Filters": filter,
           "Values": {'Token': currentToken},
-          "ObjectSettings": {"MetaData": false},
         },
       );
 

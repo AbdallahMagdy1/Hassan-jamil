@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:get/get.dart';
 import 'package:hj_app/controller/verificationController.dart';
+import 'package:hj_app/global/enumMethod.dart';
 import 'package:hj_app/global/globalUI.dart';
 import 'package:hj_app/global/globalUrl.dart';
 import 'package:hj_app/global/queryModel.dart';
@@ -10,7 +11,6 @@ import 'package:hj_app/model/settings.dart';
 import 'package:hj_app/view/screen/globalWebView.dart';
 import 'package:hj_app/view/screen/profileDetails.dart';
 import 'package:hj_app/view/screen/splash.dart';
-import 'package:http/http.dart' as HttpMethod;
 
 class ProfileController extends GetxController {
   RxInt idGender = 1.obs;
@@ -170,45 +170,44 @@ class ProfileController extends GetxController {
     super.onInit();
   }
 
-  // Load settings (countries, cities, genders) from API
+  // Load settings (countries, cities, genders) from API. Calls
+  // GET {lang}/api/User/GetSettings — the helper auto-prepends lang + backend.
   Future<void> getSettings() async {
     try {
-      // 1. Try cache first
-      var cachedSettings = readGetStorage('settingsCache');
+      // 1. Try cache first (instant UI; cache may be per-language since the
+      //    response interpolates Description<lang> from the server).
+      final cacheKey = 'settingsCache_$language';
+      var cachedSettings = readGetStorage(cacheKey);
       if (cachedSettings != null) {
-        debugPrint("Loaded settings from cache");
-        _parseAndApplySettings(cachedSettings);
+        debugPrint("Loaded settings from cache ($cacheKey)");
+        _parseAndApplySettings(Map<String, dynamic>.from(cachedSettings));
       }
 
       // 2. Fetch fresh data from API
       var data = await myRequest(
-        url: 'api/user/getSettings',
-        otherBaseUrl: baseUrlWeb,
+        url: 'api/User/GetSettings',
         method: HttpMethod.get,
         body: {},
       );
 
       // 3. Update cache and apply if successful
-      if (data != null && data != false && data is Map) {
+      if (data is Map) {
         debugPrint("Fetched fresh settings from API");
-
-        // Ensure data structure matches expected format
         Map<String, dynamic> settingsData = {
           'countries': data['countries'] ?? [],
           'cities': data['cities'] ?? [],
           'genders': data['genders'] ?? [],
         };
-
-        // Save to cache
-        await writeGetStorage('settingsCache', settingsData);
-
-        // Apply
+        await writeGetStorage(cacheKey, settingsData);
         _parseAndApplySettings(settingsData);
       } else {
-        debugPrint("Failed to fetch fresh settings: data is $data");
+        debugPrint(
+          "Failed to fetch fresh settings: data=$data, "
+          "networkFailed=$lastRequestNetworkFailed",
+        );
       }
-    } catch (e) {
-      debugPrint("Error loading settings: $e");
+    } catch (e, st) {
+      debugPrint("Error loading settings: $e\n$st");
     }
   }
 
@@ -274,30 +273,26 @@ class ProfileController extends GetxController {
     }
   }
 
-  // Filter cities based on selected country
+  // Filter cities based on selected country. The backend's GetSettings
+  // returns city.code = countryId (see UserProcessor.GetAllCities), and
+  // country.code is empty since the SQL doesn't select it. Compare against
+  // the country id directly.
   void filterCities(int selectedCountryId) {
-    if (cities.isEmpty) return;
-
-    var country = countries.firstWhereOrNull((c) => c.id == selectedCountryId);
-    if (country != null) {
-      filteredCities.value = cities.where((city) {
-        return city.code == country.code;
-      }).toList();
-    } else {
+    if (cities.isEmpty) {
       filteredCities.clear();
+      return;
     }
+    final target = selectedCountryId.toString();
+    filteredCities.value = cities.where((city) => city.code == target).toList();
   }
 
   // Validation: Check if phone number exists
   Future<bool> checkPhoneNumberExists(String phoneNumber) async {
     try {
       var data = await myRequest(
-        url: func,
+        url: 'api/Pages/$SiteNewPhoneNumberExisting',
         method: HttpMethod.post,
-        body: {
-          "Name": SiteNewPhoneNumberExisting,
-          "Values": {"phoneNumber": phoneNumber},
-        },
+        body: {"phoneNumber": phoneNumber},
       );
       return data == true;
     } catch (e) {
@@ -310,12 +305,9 @@ class ProfileController extends GetxController {
   Future<bool> checkEmailExists(String email) async {
     try {
       var data = await myRequest(
-        url: func,
+        url: 'api/Pages/$SiteNewEmailExisting',
         method: HttpMethod.post,
-        body: {
-          "Name": SiteNewEmailExisting,
-          "Values": {"email": email.trim()},
-        },
+        body: {"email": email.trim()},
       );
       return data == true;
     } catch (e) {
@@ -328,12 +320,9 @@ class ProfileController extends GetxController {
   Future<bool> checkIdentityExists(String identity) async {
     try {
       var data = await myRequest(
-        url: func,
+        url: 'api/Pages/$SiteNewIdentityExisting',
         method: HttpMethod.post,
-        body: {
-          "Name": SiteNewIdentityExisting,
-          "Values": {"identity": identity, "guid": isLogin['GUID'] ?? ""},
-        },
+        body: {"identity": identity, "guid": isLogin['GUID'] ?? ""},
       );
       return data == true;
     } catch (e) {
@@ -346,12 +335,9 @@ class ProfileController extends GetxController {
   Future<bool> checkCRExists(String crNumber) async {
     try {
       var data = await myRequest(
-        url: func,
+        url: 'api/Pages/$SiteNewCRExisting',
         method: HttpMethod.post,
-        body: {
-          "Name": SiteNewCRExisting,
-          "Values": {"identity": crNumber, "guid": isLogin['GUID'] ?? ""},
-        },
+        body: {"identity": crNumber, "guid": isLogin['GUID'] ?? ""},
       );
       return data == true;
     } catch (e) {
@@ -373,82 +359,56 @@ class ProfileController extends GetxController {
   }) async {
     isProgress.value = true;
     try {
-      var data;
+      final cleanLogo = _stripBase64Header(imageProfileBase64.value);
+      final cleanIdentityImage = _stripBase64Header(identityImage?.toString());
+
+      Map<String, dynamic> values = {
+        "IdentityNumber": '$identificationNumber',
+        "Email": '$email',
+        "Address": address,
+      };
+      if (cleanLogo != null && cleanLogo.isNotEmpty) {
+        values["Logo"] = cleanLogo;
+      }
+      if (cleanIdentityImage != null && cleanIdentityImage.isNotEmpty) {
+        values["IdentityImage"] = cleanIdentityImage;
+      }
       if (language == "ar") {
-        data = await myRequest(
-          url: update,
-          method: HttpMethod.put,
-          body: {
-            "Object": "web_users",
-            "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
-            "Values": {
-              "FirstNameAr": '$firstName',
-              "MiddleNameAr": '$middleName',
-              "GrandFatherNameAr": '$grandFatherName',
-              "LastNameAr": '$lastName',
-              "IdentityNumber": '$identificationNumber',
-              "Email": '$email',
-              "logo": imageProfileBase64,
-              "Address": address,
-              "IdentityImage": identityImage,
-            },
-            "ObjectSettings": {"MetaData": false},
-          },
-        );
+        values["FirstNameAr"] = '$firstName';
+        values["MiddleNameAr"] = '$middleName';
+        values["GrandFatherNameAr"] = '$grandFatherName';
+        values["LastNameAr"] = '$lastName';
       } else {
-        data = await myRequest(
-          url: update,
-          method: HttpMethod.put,
-          body: {
-            "Object": "web_users",
-            "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
-            "Values": {
-              "FirstNameEn": '$firstName',
-              "MiddleNameEn": '$middleName',
-              "GrandFatherNameEN": '$grandFatherName',
-              "LastNameEn": '$lastName',
-              "IdentityNumber": '$identificationNumber',
-              "Email": '$email',
-              "logo": imageProfileBase64,
-              "Address": address,
-              "IdentityImage": identityImage,
-            },
-            "ObjectSettings": {"MetaData": false},
-          },
-        );
+        values["FirstNameEn"] = '$firstName';
+        values["MiddleNameEn"] = '$middleName';
+        values["GrandFatherNameEn"] = '$grandFatherName';
+        values["LastNameEn"] = '$lastName';
       }
 
-      if (data != null && data != false && data is Map && data['MessageNo'] == '202100000000008') {
-        var data2 = await myRequest(
-          url: details,
-          method: HttpMethod.post,
-          body: {
-            "object": "web_users",
-            "option": "column",
-            "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
-            "objectsettings": {"metadata": false},
-          },
-        );
-        if (data2 != null &&
-            data2 != false &&
-            data2 is Map &&
-            data2['ApiObjectData'] != null &&
-            data2['ApiObjectData'].isNotEmpty) {
-          writeGetStorage(loginKey, data2['ApiObjectData'][0]);
-          isLogin = readGetStorage(loginKey);
+      final data = await myRequest(
+        url: 'api/Pages/Updateweb_users',
+        method: HttpMethod.post,
+        body: {
+          "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
+          "Values": values,
+        },
+      );
 
-          Future.delayed(const Duration(seconds: 2), () {
-            isProgress.value = false;
-            Get.to(const profileDetails());
-          });
-        } else {
-          isProgress.value = false;
-        }
+      if (_isUpdateSuccess(data)) {
+        await refreshUserData();
+        Fluttertoast.showToast(msg: 'profileUpdated'.tr);
+        Get.to(const profileDetails());
       } else {
-        isProgress.value = false;
+        Fluttertoast.showToast(
+          msg: lastRequestNetworkFailed
+              ? 'CHECK_INTERNET'.tr
+              : 'failedToUpdateProfile'.tr,
+        );
       }
-    } catch (e) {
-      debugPrint("Error in updateProfile: $e");
+    } catch (e, st) {
+      debugPrint("Error in updateProfile: $e\n$st");
+      Fluttertoast.showToast(msg: 'anUnexpectedErrorOccurred'.tr);
+    } finally {
       isProgress.value = false;
     }
   }
@@ -462,142 +422,221 @@ class ProfileController extends GetxController {
     return base64String;
   }
 
-  // Helper to refresh user data from API and update local storage
+  // Called by the profileDetails view on build. Handles the case where
+  // ProfileController was constructed before the user logged in (so
+  // `onInit` early-returned with `isLogin == null` and never called
+  // `getSettings`). Re-reads the storage, fetches settings if missing,
+  // then refreshes form fields from the latest user record. Cheap to call
+  // repeatedly because getSettings has its own cache.
+  Future<void> ensureLoaded() async {
+    isLogin = readGetStorage(loginKey);
+    if (isLogin == null) return;
+    if (listUserAccountTypes.isEmpty &&
+        readGetStorage(listUserAccountTypesKey) != null) {
+      listUserAccountTypes = GetUserAccountTypes.fromJsonList(
+        readGetStorage(listUserAccountTypesKey),
+      );
+    }
+    if (settings.value == null) {
+      await getSettings();
+    }
+    reloadFormData();
+  }
+
+  // Helper to refresh user data from API and update local storage. Silent
+  // by design — callers decide whether to surface a failure to the user.
   Future<void> refreshUserData() async {
     try {
-      debugPrint("Refreshing user data...");
-
-      var data = await myRequest(
-        url: details,
+      if (isLogin == null) return;
+      final data = await myRequest(
+        url: 'api/Pages/Detailsweb_users',
         method: HttpMethod.post,
         body: {
-          "object": "web_users",
-
-          "option": "column",
+          "Option": "column",
           "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
-          "objectsettings": {"metadata": false},
+          "ObjectSettings": {"MetaData": false},
         },
       );
-
-      if (data != null &&
-          data != false &&
-          data is Map &&
-          data['ApiObjectData'] != null &&
-          data['ApiObjectData'].isNotEmpty) {
-        // Update local storage
-        await writeGetStorage(loginKey, data['ApiObjectData'][0]);
-        // Update in-memory variable
+      final rows = (data is Map) ? data['ApiObjectData'] : null;
+      if (rows is List && rows.isNotEmpty) {
+        await writeGetStorage(loginKey, rows[0]);
         isLogin = readGetStorage(loginKey);
-
-        // Reload form fields with new data
         reloadFormData();
-
         debugPrint("User data refreshed successfully");
       } else {
-        debugPrint("Failed to refresh user data: Empty response");
+        debugPrint(
+          "Failed to refresh user data: data=$data, "
+          "networkFailed=$lastRequestNetworkFailed",
+        );
       }
-    } catch (e) {
-      debugPrint("Error refreshing user data: $e");
+    } catch (e, st) {
+      debugPrint("Error refreshing user data: $e\n$st");
     }
   }
 
+  // Mirrors the React app's split-update pattern (see WebSiteFrontEnd
+  // profile.jsx handleChangePersonalData + handleDocumentChange):
+  //   1) Main personal payload — names, gender, address, logo, country, city
+  //   2) Optional second call for identity/CR + CustGroupID
+  // VisualBase rejects payloads containing keys for non-existent columns or
+  // values of the wrong type (we previously hit
+  // MessageNo 202100000000019 "Error in converting the json value" because we
+  // bundled CustGroupID/IdentityNumber/grandFatherName + Logo:null +
+  // countryID:0 all into one body).
   Future<void> updateProfilePersonally() async {
     debugPrint("=== updateProfilePersonally STARTED ===");
+    final guid = isLogin?['GUID']?.toString();
+    if (guid == null || guid.isEmpty) {
+      Fluttertoast.showToast(msg: 'anUnexpectedErrorOccurred'.tr);
+      debugPrint("updateProfilePersonally: missing GUID in isLogin=$isLogin");
+      return;
+    }
+    isProgress.value = true;
     try {
-      isProgress.value = true;
-
-      // Prepare values - Clean headers from images
-      String? cleanProfileImage = _stripBase64Header(imageProfileBase64.value);
-      String? cleanIdentityImage = _stripBase64Header(
-        identityImageBase64.value,
-      );
-      String? cleanCRImage = _stripBase64Header(crImageBase64.value);
-
-      // MATCHING REACT KEYS EXACTLY
-      var updateValues = {
-        // camelCase names (matches React)
-        "firstNameAr": controllerFistName.text,
-        "middleNameAr": controllerMiddleName.text,
-        "grandFatherNameAr":
-            controllerGrandFatherName.text, // Guessing camelCase logic
-        "lastNameAr": controllerLastName.text,
-
-        // English names
-        "firstNameEn": controllerFirstNameEn.text,
-        "middleNameEn": controllerMiddleNameEn.text,
-        "grandFatherNameEn": controllerGrandFatherNameEn.text,
-        "lastNameEn": controllerLastNameEn.text,
-
-        // Other fields - React uses PascalCase for these:
-        "Address": controllerAddress.text,
-        "GenderID": idGender.value,
-        "Logo": cleanProfileImage,
-
-        // React uses camelCase for these:
-        "countryID": countryID.value,
-        "cityID": cityID.value,
-
-        "CustGroupID": custGroupID.value ?? isLogin['CustGroupID'],
-        // Identity/CR logic below
+      // ───────── 1. Personal data payload (matches React profile.jsx:572) ─
+      // Only include fields with actual values; nulls become NULL in SQL.
+      final values = <String, dynamic>{
+        if (controllerFistName.text.trim().isNotEmpty)
+          "firstNameAr": controllerFistName.text.trim(),
+        if (controllerMiddleName.text.trim().isNotEmpty)
+          "middleNameAr": controllerMiddleName.text.trim(),
+        if (controllerLastName.text.trim().isNotEmpty)
+          "lastNameAr": controllerLastName.text.trim(),
+        if (controllerFirstNameEn.text.trim().isNotEmpty)
+          "firstNameEn": controllerFirstNameEn.text.trim(),
+        if (controllerMiddleNameEn.text.trim().isNotEmpty)
+          "middleNameEn": controllerMiddleNameEn.text.trim(),
+        if (controllerLastNameEn.text.trim().isNotEmpty)
+          "lastNameEn": controllerLastNameEn.text.trim(),
+        if (controllerAddress.text.trim().isNotEmpty)
+          "Address": controllerAddress.text.trim(),
+        // GenderID must be sent as a number, not a string.
+        if (idGender.value > 0) "GenderID": idGender.value,
+        // 0 means "not selected" in our UI; React sends null in this case.
+        "countryID": (countryID.value != null && countryID.value! > 0)
+            ? countryID.value
+            : null,
+        "cityID": (cityID.value != null && cityID.value! > 0)
+            ? cityID.value
+            : null,
       };
-
-      // Add identity or CR fields based on account type
-      if (identityType.value == 1) {
-        // Identity card
-        updateValues["IdentityNumber"] = controllerIdentityNumber.text;
-        if (cleanIdentityImage != null && cleanIdentityImage.isNotEmpty) {
-          updateValues["IdentityImage"] = cleanIdentityImage;
-        }
-      } else if (identityType.value == 2) {
-        // Commercial Registration
-        updateValues["TradeNo"] = controllerCRNumber.text;
-        if (cleanCRImage != null && cleanCRImage.isNotEmpty) {
-          updateValues["TradeNoImage"] = cleanCRImage;
-        }
+      final cleanLogo = _stripBase64Header(imageProfileBase64.value);
+      if (cleanLogo != null && cleanLogo.isNotEmpty) {
+        values["Logo"] = cleanLogo;
       }
 
-      debugPrint("Sending Update Payload: $updateValues");
+      debugPrint("Personal payload: $values");
 
-      var data = await myRequest(
-        url: update,
-        method: HttpMethod.put,
-        body: {
-          "Object": "web_users",
-          "Filters": "where GUID = '${isLogin['GUID']}'",
-          "Values": updateValues,
-        },
+      final data = await myRequest(
+        url: 'api/Pages/Updateweb_users',
+        method: HttpMethod.post,
+        body: {"Filters": "where GUID = '$guid'", "Values": values},
       );
 
-      debugPrint("Update Response: ${data?.toString()}");
+      debugPrint("Personal update response: $data");
 
-      if (data != null &&
-          data != false &&
-          data is Map &&
-          (data['MessageNo'] == '202100000000008' ||
-              data['MessageNo'] == 202100000000008)) {
-        debugPrint("Update successful, refreshing data...");
-
-        await refreshUserData();
-
-        // Switch back to view mode
-        optionTap.value = 0;
-        Fluttertoast.showToast(msg: 'Profile updated successfully');
-      } else {
-        debugPrint("Update failed. MessageNo: ${data?['MessageNo']}");
-        Fluttertoast.showToast(msg: 'Failed to update profile');
+      if (!_isUpdateSuccess(data)) {
+        debugPrint(
+          "Personal update failed. data=$data, "
+          "networkFailed=$lastRequestNetworkFailed",
+        );
+        Fluttertoast.showToast(
+          msg: lastRequestNetworkFailed
+              ? 'CHECK_INTERNET'.tr
+              : _extractError(data, 'failedToUpdateProfile'),
+        );
+        return;
       }
+
+      // ───────── 2. Identity / CR payload (matches React profile.jsx:776) ─
+      // Only fire if the user actually filled the identity/CR section AND
+      // the value has changed. CustGroupID + IdentityNumber/TradeNo are
+      // grouped because a CustGroupID change typically implies switching
+      // identity types.
+      final docPayload = _buildIdentityDocumentPayload();
+      if (docPayload.isNotEmpty) {
+        debugPrint("Identity/CR payload: $docPayload");
+        final docData = await myRequest(
+          url: 'api/Pages/Updateweb_users',
+          method: HttpMethod.post,
+          body: {"Filters": "where GUID = '$guid'", "Values": docPayload},
+        );
+        debugPrint("Identity/CR update response: $docData");
+        if (!_isUpdateSuccess(docData)) {
+          debugPrint(
+            "Identity/CR update failed. data=$docData, "
+            "networkFailed=$lastRequestNetworkFailed",
+          );
+          // Personal info already saved; surface the partial failure but
+          // still refresh + leave the screen.
+          Fluttertoast.showToast(
+            msg: lastRequestNetworkFailed
+                ? 'CHECK_INTERNET'.tr
+                : _extractError(docData, 'failedToUpdateProfile'),
+          );
+        }
+      }
+
+      await refreshUserData();
+      optionTap.value = 0;
+      Fluttertoast.showToast(msg: 'profileUpdated'.tr);
     } catch (e, stackTrace) {
       debugPrint("=== EXCEPTION in updateProfilePersonally ===");
       debugPrint("Error: $e");
       debugPrint("StackTrace: $stackTrace");
-      Fluttertoast.showToast(msg: 'An error occurred: $e');
+      Fluttertoast.showToast(msg: 'anUnexpectedErrorOccurred'.tr);
     } finally {
       isProgress.value = false;
-      controllerCurrentPassword.clear();
-      controllerNewPassword.clear();
-      controllerReNewPassword.clear();
       debugPrint("=== updateProfilePersonally COMPLETED ===");
     }
+  }
+
+  // Constructs the Identity/CR portion of the profile update, returning
+  // an empty map if the user hasn't provided document data (so the caller
+  // skips the second API call entirely).
+  Map<String, dynamic> _buildIdentityDocumentPayload() {
+    final payload = <String, dynamic>{};
+    if (custGroupID.value != null && custGroupID.value!.isNotEmpty) {
+      payload["CustGroupID"] = custGroupID.value;
+    }
+    if (identityType.value == 1) {
+      final identity = controllerIdentityNumber.text.trim();
+      if (identity.isNotEmpty) {
+        payload["IdentityNumber"] = identity;
+      }
+      final cleanIdentityImage = _stripBase64Header(identityImageBase64.value);
+      if (cleanIdentityImage != null && cleanIdentityImage.isNotEmpty) {
+        payload["IdentityImage"] = cleanIdentityImage;
+      }
+    } else if (identityType.value == 2) {
+      final cr = controllerCRNumber.text.trim();
+      if (cr.isNotEmpty) {
+        payload["TradeNo"] = cr;
+      }
+      final cleanCRImage = _stripBase64Header(crImageBase64.value);
+      if (cleanCRImage != null && cleanCRImage.isNotEmpty) {
+        payload["TradeNoImage"] = cleanCRImage;
+      }
+    }
+    // If CustGroupID is the only key, there's nothing meaningful to update;
+    // skip the call entirely.
+    if (payload.length == 1 && payload.containsKey("CustGroupID")) {
+      payload.clear();
+    }
+    return payload;
+  }
+
+  // Picks a localized error string out of a VisualBase error body, falling
+  // back to the supplied translation key if the response doesn't include
+  // one. VisualBase errors look like
+  //   { "MessageNo": "...", "ArDescription": "...", "EnDescription": "..." }
+  String _extractError(dynamic data, String fallbackKey) {
+    if (data is Map) {
+      final key = language == 'ar' ? 'ArDescription' : 'EnDescription';
+      final msg = data[key];
+      if (msg is String && msg.trim().isNotEmpty) return msg.trim();
+    }
+    return fallbackKey.tr;
   }
 
   // Reload all form fields with fresh data from storage (MATCHING WEB INITIAL_USER_DATA)
@@ -701,59 +740,77 @@ class ProfileController extends GetxController {
   }
 
   Future<void> updatePassword() async {
-    try {
-      isProgress.value = true;
-      var passwordAfterMd5 = textToMd5(controllerNewPassword.text);
-      var data = await myRequest(
-        url: update,
+    // Client-side validation first — fail fast before any network call.
+    final current = controllerCurrentPassword.text;
+    final next = controllerNewPassword.text;
+    final confirm = controllerReNewPassword.text;
+    if (current.isEmpty || next.isEmpty || confirm.isEmpty) {
+      Fluttertoast.showToast(msg: 'pleaseFillAllFields'.tr);
+      return;
+    }
+    if (next != confirm) {
+      Fluttertoast.showToast(msg: 'passwordsDoNotMatch'.tr);
+      return;
+    }
+    if (next.length < 6) {
+      Fluttertoast.showToast(msg: 'passwordTooShort'.tr);
+      return;
+    }
+    if (next == current) {
+      Fluttertoast.showToast(msg: 'newPasswordSameAsOld'.tr);
+      return;
+    }
 
-        method: HttpMethod.put,
+    isProgress.value = true;
+    try {
+      // Verify the current password by looking the user up with it. This
+      // prevents a session hijacker from rotating the password without
+      // knowing the existing one.
+      final currentMd5 = textToMd5(current);
+      final verify = await myRequest(
+        url: 'api/Pages/Detailsweb_users',
+        method: HttpMethod.post,
         body: {
-          "Object": "web_users",
-          "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
-          "Values": {"Password": passwordAfterMd5},
+          "Option": "column",
+          "Fields": "Web_UserID",
+          "Filters":
+              "where Web_UserID = '${isLogin['Web_UserID']}' and Password = '$currentMd5'",
           "ObjectSettings": {"MetaData": false},
         },
       );
-      if (data != null && data != false && data is Map && data['MessageNo'] == '202100000000008') {
-        // Refresh user data
-        var data2 = await myRequest(
-          url: details,
-
-          method: HttpMethod.post,
-          body: {
-            "object": "web_users",
-            "option": "column",
-            "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
-            "objectsettings": {"metadata": false},
-          },
+      final verifyRows = (verify is Map) ? verify['ApiObjectData'] : null;
+      if (verifyRows is! List || verifyRows.isEmpty) {
+        Fluttertoast.showToast(
+          msg: lastRequestNetworkFailed
+              ? 'CHECK_INTERNET'.tr
+              : 'currentPasswordIncorrect'.tr,
         );
-        if (data2 != null &&
-            data2 != false &&
-            data2 is Map &&
-            data2['ApiObjectData'] != null &&
-            data2['ApiObjectData'].isNotEmpty) {
-          writeGetStorage(loginKey, data2['ApiObjectData'][0]);
-          isLogin = readGetStorage(loginKey);
-
-          // Reload form fields with fresh data
-          reloadFormData();
-
-          // Switch back to view mode
-          optionTap.value = 2;
-          Fluttertoast.showToast(msg: 'Password updated successfully');
-        } else {
-          debugPrint("Error: Empty response or failure when refreshing user data");
-          Fluttertoast.showToast(
-            msg: 'Password updated but failed to refresh data',
-          );
-        }
-      } else {
-        Fluttertoast.showToast(msg: 'Failed to update password');
+        return;
       }
-    } catch (e) {
-      debugPrint("Error in updatePassword: $e");
-      Fluttertoast.showToast(msg: 'An error occurred');
+
+      final nextMd5 = textToMd5(next);
+      final data = await myRequest(
+        url: 'api/Pages/Updateweb_users',
+        method: HttpMethod.post,
+        body: {
+          "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
+          "Values": {"Password": nextMd5},
+        },
+      );
+      if (_isUpdateSuccess(data)) {
+        await refreshUserData();
+        optionTap.value = 2;
+        Fluttertoast.showToast(msg: 'passwordUpdated'.tr);
+      } else {
+        Fluttertoast.showToast(
+          msg: lastRequestNetworkFailed
+              ? 'CHECK_INTERNET'.tr
+              : 'failedToUpdatePassword'.tr,
+        );
+      }
+    } catch (e, st) {
+      debugPrint("Error in updatePassword: $e\n$st");
+      Fluttertoast.showToast(msg: 'anUnexpectedErrorOccurred'.tr);
     } finally {
       isProgress.value = false;
       controllerCurrentPassword.clear();
@@ -763,65 +820,45 @@ class ProfileController extends GetxController {
   }
 
   Future<void> updatePasswordContactInformation() async {
+    isProgress.value = true;
     try {
-      isProgress.value = true;
-      var data = await myRequest(
-        url: update,
+      // Read phone & email straight from the TextFields — the previous
+      // `phoneNumber` field only updated on TextField.onChanged so it could
+      // be stale (e.g. when the user pastes a number without firing the
+      // change callback).
+      final phoneText = controllerPhoneNumber.text.trim();
+      final emailText = controllerEmail.text.trim();
+      final fallbackPhone = '${isLogin['Phone'] ?? ''}';
+      final phoneToSend = phoneText.isNotEmpty ? phoneText : fallbackPhone;
 
-        method: HttpMethod.put,
+      if (emailText.isEmpty) {
+        Fluttertoast.showToast(msg: 'pleaseEnterValidEmail'.tr);
+        return;
+      }
+
+      final data = await myRequest(
+        url: 'api/Pages/Updateweb_users',
+        method: HttpMethod.post,
         body: {
-          "Object": "web_users",
           "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
-          "Values": {
-            "Phone": phoneNumber != null
-                ? '$phoneNumber'
-                : '${isLogin['Phone']}',
-            "Email": controllerEmail.text,
-          },
-          "ObjectSettings": {"MetaData": false},
+          "Values": {"Phone": phoneToSend, "Email": emailText},
         },
       );
-      if (data != null && data != false && data is Map && data['MessageNo'] == '202100000000008') {
-        // Refresh user data
-        var data2 = await myRequest(
-          url: details,
 
-          method: HttpMethod.post,
-          body: {
-            "object": "web_users",
-            "option": "column",
-            "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
-            "objectsettings": {"metadata": false},
-          },
-        );
-        if (data2 != null &&
-            data2 != false &&
-            data2 is Map &&
-            data2['ApiObjectData'] != null &&
-            data2['ApiObjectData'].isNotEmpty) {
-          writeGetStorage(loginKey, data2['ApiObjectData'][0]);
-          isLogin = readGetStorage(loginKey);
-
-          // Reload form fields with fresh data
-          reloadFormData();
-
-          // Switch back to view mode
-          optionTap.value = 1;
-          Fluttertoast.showToast(
-            msg: 'Contact information updated successfully',
-          );
-        } else {
-          debugPrint("Error: Empty response or failure when refreshing user data");
-          Fluttertoast.showToast(
-            msg: 'Update successful but failed to refresh data',
-          );
-        }
+      if (_isUpdateSuccess(data)) {
+        await refreshUserData();
+        optionTap.value = 1;
+        Fluttertoast.showToast(msg: 'contactInformationUpdated'.tr);
       } else {
-        Fluttertoast.showToast(msg: 'Failed to update contact information');
+        Fluttertoast.showToast(
+          msg: lastRequestNetworkFailed
+              ? 'CHECK_INTERNET'.tr
+              : 'failedToUpdateContactInformation'.tr,
+        );
       }
-    } catch (e) {
-      debugPrint("Error in updatePasswordContactInformation: $e");
-      Fluttertoast.showToast(msg: 'An error occurred');
+    } catch (e, st) {
+      debugPrint("Error in updatePasswordContactInformation: $e\n$st");
+      Fluttertoast.showToast(msg: 'anUnexpectedErrorOccurred'.tr);
     } finally {
       isProgress.value = false;
     }
@@ -830,53 +867,44 @@ class ProfileController extends GetxController {
   Future<void> updateLogo() async {
     try {
       isProgressImage.value = true;
+      final cleanLogo = _stripBase64Header(imageProfileBase64.value);
+      if (cleanLogo == null || cleanLogo.isEmpty) {
+        Fluttertoast.showToast(msg: 'noImageSelected'.tr);
+        return;
+      }
       var data = await myRequest(
-        url: update,
-
-        method: HttpMethod.put,
+        url: 'api/Pages/Updateweb_users',
+        method: HttpMethod.post,
         body: {
-          "Object": "web_users",
           "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
-          "Values": {"logo": imageProfileBase64},
-          "ObjectSettings": {"MetaData": false},
+          "Values": {"Logo": cleanLogo},
         },
       );
-      if (data != null && data != false && data is Map && data['MessageNo'] == '202100000000008') {
-        // Refresh user data
-        var data2 = await myRequest(
-          url: details,
-
-          method: HttpMethod.post,
-          body: {
-            "object": "web_users",
-            "option": "column",
-            "Filters": "where Web_UserID = '${isLogin['Web_UserID']}'",
-            "objectsettings": {"metadata": false},
-          },
-        );
-        if (data2 != null &&
-            data2 != false &&
-            data2 is Map &&
-            data2['ApiObjectData'] != null &&
-            data2['ApiObjectData'].isNotEmpty) {
-          writeGetStorage(loginKey, data2['ApiObjectData'][0]);
-          isLogin = readGetStorage(loginKey);
-          Fluttertoast.showToast(msg: 'Profile image updated successfully');
-        } else {
-          debugPrint("Error: Empty response or failure when refreshing user data");
-          Fluttertoast.showToast(
-            msg: 'Image uploaded but failed to refresh data',
-          );
-        }
+      if (_isUpdateSuccess(data)) {
+        await refreshUserData();
+        Fluttertoast.showToast(msg: 'profileImageUpdated'.tr);
       } else {
-        Fluttertoast.showToast(msg: 'Failed to update profile image');
+        Fluttertoast.showToast(
+          msg: lastRequestNetworkFailed
+              ? 'CHECK_INTERNET'.tr
+              : 'failedToUpdateProfileImage'.tr,
+        );
       }
-    } catch (e) {
-      debugPrint("Error in updateLogo: $e");
-      Fluttertoast.showToast(msg: 'An error occurred');
+    } catch (e, st) {
+      debugPrint("Error in updateLogo: $e\n$st");
+      Fluttertoast.showToast(msg: 'anUnexpectedErrorOccurred'.tr);
     } finally {
       isProgressImage.value = false;
     }
+  }
+
+  // Treats the standard VisualBase success MessageNo as ok, accepting
+  // both string and numeric representations (the JSON serializer can
+  // return either depending on the column type).
+  bool _isUpdateSuccess(dynamic data) {
+    if (data is! Map) return false;
+    final msg = data['MessageNo'];
+    return msg == '202100000000008' || msg == 202100000000008;
   }
 
   Future<bool> userFound({
@@ -884,21 +912,23 @@ class ProfileController extends GetxController {
     required String accessType,
   }) async {
     isProgress.value = true;
-    if (accessType == 'phonenumber') {
-      access = '+966${access.trim().replaceFirst('+966', '')}';
+    try {
+      if (accessType == 'phonenumber') {
+        access = '+966${access.trim().replaceFirst('+966', '')}';
+      }
+      var data = await myRequest(
+        otherBaseUrl: administrationUrl,
+        url: UserFound,
+        method: HttpMethod.post,
+        body: {"Access": access, "AccessType": accessType},
+      );
+      return data != false;
+    } catch (e, st) {
+      debugPrint("Error in userFound: $e\n$st");
+      return false;
+    } finally {
+      isProgress.value = false;
     }
-    var data = await myRequest(
-      otherBaseUrl: administrationUrl,
-      url: UserFound,
-      method: HttpMethod.post,
-      body: {"Access": access, "AccessType": accessType},
-    );
-
-    if (data != false) {
-      return true;
-    }
-
-    return false;
   }
 
   void deleteMyAccountFunction(

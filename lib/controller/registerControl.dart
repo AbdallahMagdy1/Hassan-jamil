@@ -85,12 +85,9 @@ class RegisterControl extends GetxController {
 
       if (data != null && data is List && data.length >= 2 && data[0] == true) {
         var data2 = await myRequest(
-          url: func,
+          url: 'api/Pages/Site_SendSmsCodeFormAppFunction',
           method: HttpMethod.post,
-          body: {
-            "Name": "Site_SendSmsCodeFormAppFunction",
-            "Values": {"to": "+966${phoneNumber.trim()}"},
-          },
+          body: {"to": "+966${phoneNumber.trim()}"},
         );
 
         if (data2 != null &&
@@ -152,13 +149,12 @@ class RegisterControl extends GetxController {
       textErrorLogin.value = '';
       var data = await myRequest(
         method: HttpMethod.post,
-        url: details,
+        url: 'api/Pages/Detailsweb_users',
         body: {
-          "object": "web_users",
-          "option": "column",
+          "Option": "column",
           "Fields": "Email",
-          "filters": "where Email = '$email'",
-          "objectsettings": {"metadata": false},
+          "Filters": "where Email = '$email'",
+          "ObjectSettings": {"MetaData": false},
         },
       );
 
@@ -188,13 +184,12 @@ class RegisterControl extends GetxController {
       textErrorLogin.value = '';
       var data = await myRequest(
         method: HttpMethod.post,
-        url: details,
+        url: 'api/Pages/Detailsweb_users',
         body: {
-          "object": "web_users",
-          "option": "column",
+          "Option": "column",
           "Fields": "Email",
-          "filters": "where IdentityNumber = '$identificationNumber'",
-          "objectsettings": {"metadata": false},
+          "Filters": "where IdentityNumber = '$identificationNumber'",
+          "ObjectSettings": {"MetaData": false},
         },
       );
 
@@ -230,9 +225,9 @@ class RegisterControl extends GetxController {
       isProgressCreateAccount.value = true;
       textErrorLogin.value = '';
       var data = await myRequest(
-        url: func,
+        url: 'api/Pages/$SiteGetUserAccountTypes',
         method: HttpMethod.post,
-        body: {"name": SiteGetUserAccountTypes},
+        body: {},
       );
 
       if (data != null && data is List && data.isNotEmpty) {
@@ -317,13 +312,11 @@ class RegisterControl extends GetxController {
       if (data != null && data is List && data.length >= 2 && data[0] == true) {
         validation.value = false;
         await myRequest(
-          url: update,
-          method: HttpMethod.put,
+          url: 'api/Pages/Updateweb_users',
+          method: HttpMethod.post,
           body: {
-            "Object": "web_users",
-            "filters": "where Phone = '+966${phone.toString().trim()}' ",
+            "Filters": "where Phone = '+966${phone.toString().trim()}' ",
             "Values": {'Token': '$fcmToken'},
-            "ObjectSettings": {"MetaData": false},
           },
         );
         Get.offAll(

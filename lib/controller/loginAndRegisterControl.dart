@@ -73,177 +73,207 @@ class LoginAndRegisterControl extends GetxController {
     bool goback = false,
   }) async {
     isProgress.value = true;
-    var data = await myRequest(
-      otherBaseUrl: administrationUrl,
-      url: getUserPhone,
-      method: HttpMethod.post,
-      body: {
-        "Access": "+966${phoneNumber.trim()}",
-        "AccessType": "phonenumber",
-      },
-    );
-
-    if (data != false) {
-      var data2 = await myRequest(
-        url: func,
+    try {
+      var data = await myRequest(
+        otherBaseUrl: administrationUrl,
+        url: getUserPhone,
         method: HttpMethod.post,
         body: {
-          "Name": "Site_SendSmsCodeFormAppFunction",
-          "Values": {"to": "$data"},
+          "Access": "+966${phoneNumber.trim()}",
+          "AccessType": "phonenumber",
         },
       );
+
+      if (data == false) {
+        validation.value = false;
+        textErrorLogin.value = lastRequestNetworkFailed
+            ? 'CHECK_INTERNET'.tr
+            : 'phoneNumberNotFound';
+        return;
+      }
+
+      var data2 = await myRequest(
+        url: 'api/Pages/Site_SendSmsCodeFormAppFunction',
+        method: HttpMethod.post,
+        body: {"to": "$data"},
+      );
+      if (data2 is! List || data2.isEmpty || data2[0]?['Code'] == null) {
+        validation.value = false;
+        textErrorLogin.value = 'somethingWentWrong'.tr;
+        debugPrint(
+          '❌ Site_SendSmsCodeFormAppFunction returned unexpected: $data2',
+        );
+        return;
+      }
+
       await myRequest(
-        url: update,
-        method: HttpMethod.put,
+        url: 'api/Pages/Updateweb_users',
+        method: HttpMethod.post,
         body: {
-          "Object": "web_users",
           "Filters": "where Phone = '+966${phoneNumber.trim()}'",
           "Values": {'ValidationKey': '${data2[0]['Code']}'},
-          "ObjectSettings": {"MetaData": false},
         },
       );
       validation.value = false;
-      isProgress.value = false;
-      /*  if (phoneNumber.trim() == '536992950') {
-        VerificationControl verificationControl = VerificationControl();
-        verificationControl.checkVerification(phoneNumber.trim());
-      } else {*/
       if (goback) {
         Get.back();
       }
       Get.to(
         Verification(
           data2[0]['phone'].toString().replaceAll('+', ''),
-          verificationCodeFromFunction: int.parse(data2[0]['Code']),
+          verificationCodeFromFunction: int.parse(data2[0]['Code'].toString()),
           isFromSplashScreen: isFromSplashScreen,
         ),
       );
-      // }
-    }
-    if (data == false) {
-      isProgress.value = false;
+    } catch (e, st) {
+      debugPrint('❌ sendLoginAcrossPhoneNumber error: $e\n$st');
       validation.value = false;
-      // bottomSheetError(`text: 'phoneNumberNotFound'.tr);
-      textErrorLogin.value = 'phoneNumberNotFound';
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
   Future<void> sendLoginAcrossIdentityNo(identityNo, isFromSplashScreen) async {
     isProgress.value = true;
-    var data = await myRequest(
-      otherBaseUrl: administrationUrl,
-      url: getUserPhone,
-      method: HttpMethod.post,
-      body: {"Access": "$identityNo", "AccessType": "IdentityNo"},
-    );
-
-    if (data != false) {
-      var data2 = await myRequest(
-        url: func,
+    try {
+      var data = await myRequest(
+        otherBaseUrl: administrationUrl,
+        url: getUserPhone,
         method: HttpMethod.post,
-        body: {
-          "Name": "Site_SendSmsCodeFormAppFunction",
-          "Values": {"to": "+966$data"},
-        },
+        body: {"Access": "$identityNo", "AccessType": "IdentityNo"},
       );
+
+      if (data == false) {
+        validation.value = false;
+        textErrorLogin.value = lastRequestNetworkFailed
+            ? 'CHECK_INTERNET'.tr
+            : 'theIDNumberNotFound';
+        return;
+      }
+
+      var data2 = await myRequest(
+        url: 'api/Pages/Site_SendSmsCodeFormAppFunction',
+        method: HttpMethod.post,
+        body: {"to": "+966$data"},
+      );
+      if (data2 is! List || data2.isEmpty || data2[0]?['Code'] == null) {
+        validation.value = false;
+        textErrorLogin.value = 'somethingWentWrong'.tr;
+        debugPrint(
+          '❌ Site_SendSmsCodeFormAppFunction returned unexpected: $data2',
+        );
+        return;
+      }
       validation.value = false;
-      isProgress.value = false;
       Get.to(
         Verification(
           data2[0]['phone'],
-          verificationCodeFromFunction: int.parse(data2[0]['Code']),
+          verificationCodeFromFunction: int.parse(data2[0]['Code'].toString()),
           isFromSplashScreen: isFromSplashScreen,
         ),
       );
-    }
-    if (data == false) {
-      isProgress.value = false;
+    } catch (e, st) {
+      debugPrint('❌ sendLoginAcrossIdentityNo error: $e\n$st');
       validation.value = false;
-      // bottomSheetError(text: 'phoneNumberNotFound'.tr);
-      textErrorLogin.value = 'theIDNumberNotFound';
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
   Future<void> forgotPassword(phoneNumber, isFromSplashScreen) async {
     isForgotPassword.value = true;
-    var data = await myRequest(
-      otherBaseUrl: administrationUrl,
-      url: sendSms,
-      method: HttpMethod.post,
-      body: {
-        "Access": "+966${phoneNumber.trim()}",
-        "AccessType": "PhoneNumber",
-      },
-    );
-    if (data == true) {
-      var data2 = await myRequest(
-        url: func,
+    try {
+      var data = await myRequest(
+        otherBaseUrl: administrationUrl,
+        url: sendSms,
         method: HttpMethod.post,
         body: {
-          "Name": "Site_SendSmsCodeFormAppFunction",
-          "Values": {"to": "+966${phoneNumber.trim()}"},
+          "Access": "+966${phoneNumber.trim()}",
+          "AccessType": "PhoneNumber",
         },
       );
+      if (data != true) {
+        validation.value = false;
+        textErrorLogin.value = lastRequestNetworkFailed
+            ? 'CHECK_INTERNET'.tr
+            : 'phoneNumberNotFound';
+        return;
+      }
+      var data2 = await myRequest(
+        url: 'api/Pages/Site_SendSmsCodeFormAppFunction',
+        method: HttpMethod.post,
+        body: {"to": "+966${phoneNumber.trim()}"},
+      );
+      if (data2 is! List || data2.isEmpty || data2[0]?['Code'] == null) {
+        validation.value = false;
+        textErrorLogin.value = 'somethingWentWrong'.tr;
+        debugPrint(
+          '❌ Site_SendSmsCodeFormAppFunction returned unexpected: $data2',
+        );
+        return;
+      }
       await myRequest(
-        url: update,
-        method: HttpMethod.put,
+        url: 'api/Pages/Updateweb_users',
+        method: HttpMethod.post,
         body: {
-          "Object": "web_users",
           "Filters": "where Phone = '+966${phoneNumber.trim()}'",
           "Values": {'ValidationKey': '${data2[0]['Code']}'},
-          "ObjectSettings": {"MetaData": false},
         },
       );
-      isForgotPassword.value = false;
 
       Get.to(
         Verification(
           phoneNumber.toString(),
-          verificationCodeFromFunction: int.parse(data2[0]['Code']),
+          verificationCodeFromFunction: int.parse(data2[0]['Code'].toString()),
           isFromSplashScreen: isFromSplashScreen,
           isForgetPassWord: true,
           acrossEmail: false,
         ),
       );
-    }
-    if (data == false) {
-      isForgotPassword.value = false;
+    } catch (e, st) {
+      debugPrint('❌ forgotPassword error: $e\n$st');
       validation.value = false;
-      textErrorLogin.value = 'phoneNumberNotFound';
-      // bottomSheetError(text: 'phoneNumberNotFound'.tr);
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isForgotPassword.value = false;
     }
   }
 
   Future<void> checkEmailIsFound(email, isFromSplashScreen) async {
     isProgress.value = true;
-    var data = await myRequest(
-      url: details,
-      method: HttpMethod.post,
-      body: {
-        "object": "web_users",
-        "option": "column",
-        "filters": "where Email = '$email'",
-        "objectsettings": {"metadata": false},
-      },
-    );
-
-    if (data['ApiObjectData'].isNotEmpty) {
-      isProgress.value = false;
-      validation.value = false;
-      Get.to(
-        LoginPassWordScreen(
-          isFromSplashScreen: isFromSplashScreen,
-          email: email,
-          phone: data['ApiObjectData'][0]['Phone'],
-          acrossEmail: true,
-        ),
+    try {
+      var data = await myRequest(
+        url: 'api/Pages/Detailsweb_users',
+        method: HttpMethod.post,
+        body: {
+          "Option": "column",
+          "Filters": "where Email = '$email'",
+          "ObjectSettings": {"MetaData": false},
+        },
       );
-    }
-    if (data['ApiObjectData'].isEmpty) {
-      isProgress.value = false;
+      final rows = (data is Map) ? data['ApiObjectData'] : null;
+      if (rows is List && rows.isNotEmpty) {
+        validation.value = false;
+        Get.to(
+          LoginPassWordScreen(
+            isFromSplashScreen: isFromSplashScreen,
+            email: email,
+            phone: rows[0]['Phone'],
+            acrossEmail: true,
+          ),
+        );
+      } else {
+        validation.value = false;
+        textErrorLogin.value = 'pleaseEnterValidEmail';
+      }
+    } catch (e, st) {
+      debugPrint('❌ checkEmailIsFound error: $e\n$st');
       validation.value = false;
-      // bottomSheetError(text: 'pleaseEnterAValidEmail'.tr);
-      textErrorLogin.value = 'pleaseEnterValidEmail';
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
@@ -252,34 +282,37 @@ class LoginAndRegisterControl extends GetxController {
     isFromSplashScreen,
   ) async {
     isProgress.value = true;
-    var data = await myRequest(
-      url: details,
-      method: HttpMethod.post,
-      body: {
-        "object": "web_users",
-        "option": "column",
-        "filters": "where IdentityNumber = '$identificationNumber'",
-        "objectsettings": {"metadata": false},
-      },
-    );
-
-    if (data['ApiObjectData'].isNotEmpty) {
-      isProgress.value = false;
-      validation.value = false;
-      Get.to(
-        LoginPassWordScreen(
-          isFromSplashScreen: isFromSplashScreen,
-          identificationNumber: identificationNumber,
-          phone: data['ApiObjectData'][0]['Phone'],
-          acrossIdentificationNumber: true,
-        ),
+    try {
+      var data = await myRequest(
+        url: 'api/Pages/Detailsweb_users',
+        method: HttpMethod.post,
+        body: {
+          "Option": "column",
+          "Filters": "where IdentityNumber = '$identificationNumber'",
+          "ObjectSettings": {"MetaData": false},
+        },
       );
-    }
-    if (data['ApiObjectData'].isEmpty) {
-      isProgress.value = false;
+      final rows = (data is Map) ? data['ApiObjectData'] : null;
+      if (rows is List && rows.isNotEmpty) {
+        validation.value = false;
+        Get.to(
+          LoginPassWordScreen(
+            isFromSplashScreen: isFromSplashScreen,
+            identificationNumber: identificationNumber,
+            phone: rows[0]['Phone'],
+            acrossIdentificationNumber: true,
+          ),
+        );
+      } else {
+        validation.value = false;
+        textErrorLogin.value = 'PleaseEnterAValidIDNumber';
+      }
+    } catch (e, st) {
+      debugPrint('❌ checkIdentificationNumberIsFound error: $e\n$st');
       validation.value = false;
-      // bottomSheetError(text: 'PleaseEnterAValidIDNumber'.tr);
-      textErrorLogin.value = 'PleaseEnterAValidIDNumber';
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
@@ -289,41 +322,42 @@ class LoginAndRegisterControl extends GetxController {
     isFromSplashScreen,
   ) async {
     isProgress.value = true;
-    var passwordAfterMd5 = textToMd5(password);
+    try {
+      var passwordAfterMd5 = textToMd5(password);
 
-    var data = await myRequest(
-      url: details,
-      method: HttpMethod.post,
-      body: {
-        "object": "web_users",
-        "option": "column",
-        "filters": "where Email = '$email'and Password ='$passwordAfterMd5'",
-        "objectsettings": {"metadata": false},
-      },
-    );
-
-    if (data['ApiObjectData'].isNotEmpty) {
-      writeGetStorage(loginKey, data['ApiObjectData'][0]);
-      isProgress.value = false;
-      validation.value = false;
-      getUserAccountTypes2();
-      await myRequest(
-        url: update,
-        method: HttpMethod.put,
+      var data = await myRequest(
+        url: 'api/Pages/Detailsweb_users',
+        method: HttpMethod.post,
         body: {
-          "Object": "web_users",
-          "filters": "where  Email = '$email' ",
-          "Values": {'Token': '$fcmToken'},
+          "Option": "column",
+          "Filters": "where Email = '$email'and Password ='$passwordAfterMd5'",
           "ObjectSettings": {"MetaData": false},
         },
       );
-      Get.offAll(MainView());
-    }
-    if (data['ApiObjectData'].isEmpty) {
-      isProgress.value = false;
+      final rows = (data is Map) ? data['ApiObjectData'] : null;
+      if (rows is List && rows.isNotEmpty) {
+        writeGetStorage(loginKey, rows[0]);
+        validation.value = false;
+        getUserAccountTypes2();
+        await myRequest(
+          url: 'api/Pages/Updateweb_users',
+          method: HttpMethod.post,
+          body: {
+            "Filters": "where  Email = '$email' ",
+            "Values": {'Token': '$fcmToken'},
+          },
+        );
+        Get.offAll(MainView());
+      } else {
+        validation.value = false;
+        isPassWordNotCorrect.value = true;
+      }
+    } catch (e, st) {
+      debugPrint('❌ checkEmailAndPassWordIsCorrect error: $e\n$st');
       validation.value = false;
-      isPassWordNotCorrect.value = true;
-      // bottomSheetError(text: 'PleaseEnterAValidPassword'.tr);
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
@@ -332,43 +366,45 @@ class LoginAndRegisterControl extends GetxController {
     password,
     isFromSplashScreen,
   ) async {
-    var passwordAfterMd5 = textToMd5(password);
     isProgress.value = true;
-    var data = await myRequest(
-      url: details,
-      method: HttpMethod.post,
-      body: {
-        "object": "web_users",
-        "option": "column",
-        "filters":
-            "where IdentityNumber = '$identificationNumber'and Password ='$passwordAfterMd5'",
-        "objectsettings": {"metadata": false},
-      },
-    );
-
-    if (data['ApiObjectData'].isNotEmpty) {
-      writeGetStorage(loginKey, data['ApiObjectData'][0]);
-      isProgress.value = false;
-      validation.value = false;
-      await myRequest(
-        url: update,
-        method: HttpMethod.put,
+    try {
+      var passwordAfterMd5 = textToMd5(password);
+      var data = await myRequest(
+        url: 'api/Pages/Detailsweb_users',
+        method: HttpMethod.post,
         body: {
-          "Object": "web_users",
-          "filters": "where  IdentityNumber = '$identificationNumber' ",
-          "Values": {'Token': '$fcmToken'},
+          "Option": "column",
+          "Filters":
+              "where IdentityNumber = '$identificationNumber'and Password ='$passwordAfterMd5'",
           "ObjectSettings": {"MetaData": false},
         },
       );
-      getUserAccountTypes2();
-      Get.offAll(MainView());
-    }
-    if (data['ApiObjectData'].isEmpty) {
-      isProgress.value = false;
+      final rows = (data is Map) ? data['ApiObjectData'] : null;
+      if (rows is List && rows.isNotEmpty) {
+        writeGetStorage(loginKey, rows[0]);
+        validation.value = false;
+        await myRequest(
+          url: 'api/Pages/Updateweb_users',
+          method: HttpMethod.post,
+          body: {
+            "Filters": "where  IdentityNumber = '$identificationNumber' ",
+            "Values": {'Token': '$fcmToken'},
+          },
+        );
+        getUserAccountTypes2();
+        Get.offAll(MainView());
+      } else {
+        validation.value = false;
+        isPassWordNotCorrect.value = true;
+      }
+    } catch (e, st) {
+      debugPrint(
+        '❌ checkIdentificationNumberAndPassWordIsCorrect error: $e\n$st',
+      );
       validation.value = false;
-      isPassWordNotCorrect.value = true;
-
-      // bottomSheetError(text: 'PleaseEnterAValidPassword'.tr);
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
@@ -377,106 +413,135 @@ class LoginAndRegisterControl extends GetxController {
     isFromSplashScreen,
   ) async {
     isProgress.value = true;
-    var data = await myRequest(
-      otherBaseUrl: administrationUrl,
-      url: sendFreeSms,
-      method: HttpMethod.post,
-      returnHeader: true,
-      body: {"phonenumber": "+966$phoneNumber"},
-    );
-
-    if (data[0] == true) {
-      var data2 = await myRequest(
-        url: func,
+    try {
+      var data = await myRequest(
+        otherBaseUrl: administrationUrl,
+        url: sendFreeSms,
         method: HttpMethod.post,
-        body: {
-          "Name": "Site_SendSmsCodeFormAppFunction",
-          "Values": {"to": "+966${phoneNumber.trim()}"},
-        },
+        returnHeader: true,
+        body: {"phonenumber": "+966$phoneNumber"},
       );
-      isProgress.value = false;
+
+      if (data is! List || data.isEmpty) {
+        validation.value = false;
+        textErrorLogin.value = 'somethingWentWrong'.tr;
+        return;
+      }
+      if (data[0] == false) {
+        validation.value = false;
+        textErrorLogin.value = (data.length >= 2 && data[1] is Map)
+            ? (language == 'en'
+                  ? data[1]['EnDescription']
+                  : data[1]['ArDescription'])
+            : 'somethingWentWrong'.tr;
+        return;
+      }
+
+      var data2 = await myRequest(
+        url: 'api/Pages/Site_SendSmsCodeFormAppFunction',
+        method: HttpMethod.post,
+        body: {"to": "+966${phoneNumber.trim()}"},
+      );
+      if (data2 is! List || data2.isEmpty || data2[0]?['Code'] == null) {
+        validation.value = false;
+        textErrorLogin.value = 'somethingWentWrong'.tr;
+        debugPrint(
+          '❌ Site_SendSmsCodeFormAppFunction returned unexpected: $data2',
+        );
+        return;
+      }
       validation.value = false;
       var subStringKey = data[1].substring(10);
-
       var varSemicolon = subStringKey.indexOf(';');
-
       var md5Hash = subStringKey.toString().substring(0, varSemicolon);
 
       Get.to(
         VerificationRegistration(
           phoneNumber,
           md5Hash,
-          verificationCodeFromFunction: int.parse(data2[0]['Code']),
+          verificationCodeFromFunction: int.tryParse(
+            data2[0]['Code'].toString(),
+          ),
           isFromSplashScreen: isFromSplashScreen,
         ),
       );
-    }
-    if (data[0] == false) {
-      isProgress.value = false;
-      isProgress.value = false;
+    } catch (e, st) {
+      debugPrint('❌ RegisterAcrossPhoneNumber error: $e\n$st');
       validation.value = false;
-      /* bottomSheetError(
-          text: language == 'en'
-              ? data[1]['EnDescription']
-              : data[1]['ArDescription']);*/
-      textErrorLogin.value = (language == 'en'
-          ? data[1]['EnDescription']
-          : data[1]['ArDescription']);
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
   Future<void> RegisterAcrossEmail(email) async {
     isProgress.value = true;
-    var data = await myRequest(
-      method: HttpMethod.post,
-      url: details,
-      body: {
-        "object": "web_users",
-        "option": "column",
-        "Fields": "Email",
-        "filters": "where Email = '$email'",
-        "objectsettings": {"metadata": false},
-      },
-    );
-
-    if (data['ApiObjectData'].isEmpty) {
-      isProgress.value = false;
-      Get.to(RegistrationPage(emial: email, password: passwordController.text));
-    } else if (data['ApiObjectData'].isNotEmpty) {
-      isProgress.value = false;
+    try {
+      var data = await myRequest(
+        method: HttpMethod.post,
+        url: 'api/Pages/Detailsweb_users',
+        body: {
+          "Option": "column",
+          "Fields": "Email",
+          "Filters": "where Email = '$email'",
+          "ObjectSettings": {"MetaData": false},
+        },
+      );
+      final rows = (data is Map) ? data['ApiObjectData'] : null;
+      if (rows is List && rows.isEmpty) {
+        Get.to(
+          RegistrationPage(emial: email, password: passwordController.text),
+        );
+      } else if (rows is List && rows.isNotEmpty) {
+        validation.value = false;
+        textErrorLogin.value = 'emailAlreadyExists'.tr;
+      } else {
+        validation.value = false;
+        textErrorLogin.value = 'somethingWentWrong'.tr;
+      }
+    } catch (e, st) {
+      debugPrint('❌ RegisterAcrossEmail error: $e\n$st');
       validation.value = false;
-      // bottomSheetError(text: 'emailAlreadyExists'.tr);
-      textErrorLogin.value = 'emailAlreadyExists'.tr;
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
   Future<void> RegisterAcrossIdentificationNumber(identificationNumber) async {
     isProgress.value = true;
-    var data = await myRequest(
-      method: HttpMethod.post,
-      url: details,
-      body: {
-        "object": "web_users",
-        "option": "column",
-        "Fields": "Email",
-        "filters": "where IdentityNumber = '$identificationNumber'",
-        "objectsettings": {"metadata": false},
-      },
-    );
-
-    if (data['ApiObjectData'].isEmpty) {
-      isProgress.value = false;
-      Get.to(
-        RegistrationPage(
-          IdentityNumber: identificationNumber,
-          password: passwordController.text,
-        ),
+    try {
+      var data = await myRequest(
+        method: HttpMethod.post,
+        url: 'api/Pages/Detailsweb_users',
+        body: {
+          "Option": "column",
+          "Fields": "Email",
+          "Filters": "where IdentityNumber = '$identificationNumber'",
+          "ObjectSettings": {"MetaData": false},
+        },
       );
-    } else if (data['ApiObjectData'].isNotEmpty) {
-      isProgress.value = false;
+      final rows = (data is Map) ? data['ApiObjectData'] : null;
+      if (rows is List && rows.isEmpty) {
+        Get.to(
+          RegistrationPage(
+            IdentityNumber: identificationNumber,
+            password: passwordController.text,
+          ),
+        );
+      } else if (rows is List && rows.isNotEmpty) {
+        validation.value = false;
+        textErrorLogin.value = 'iDNumberAlreadyExists'.tr;
+      } else {
+        validation.value = false;
+        textErrorLogin.value = 'somethingWentWrong'.tr;
+      }
+    } catch (e, st) {
+      debugPrint('❌ RegisterAcrossIdentificationNumber error: $e\n$st');
       validation.value = false;
-      // bottomSheetError(text: 'iDNumberAlreadyExists'.tr);
-      textErrorLogin.value = 'iDNumberAlreadyExists'.tr;
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
@@ -486,51 +551,44 @@ class LoginAndRegisterControl extends GetxController {
     VideoPlayerController? vc,
   }) async {
     isProgressCreateAccount.value = true;
-    var data = await myRequest(
-      url: func,
-      method: HttpMethod.post,
-      body: {"name": SiteGetUserAccountTypes},
-    );
-
-    if (data is bool && data == false) {
-      isProgressCreateAccount.value = false;
+    try {
+      var data = await myRequest(
+        url: 'api/Pages/$SiteGetUserAccountTypes',
+        method: HttpMethod.post,
+        body: {},
+      );
+      if (data is List && data.isNotEmpty) {
+        validation.value = false;
+        listUserAccountTypes = GetUserAccountTypes.fromJsonList(data);
+        if (vc != null) vc.pause();
+        await Get.to(optionRegister());
+        if (vc != null) vc.play();
+        return;
+      }
       validation.value = false;
       textErrorLogin.value = 'somethingWentWrong'.tr;
-      return;
-    }
-
-    if (data.isNotEmpty) {
-      isProgressCreateAccount.value = false;
+    } catch (e, st) {
+      debugPrint('❌ getUserAccountTypes error: $e\n$st');
       validation.value = false;
-      listUserAccountTypes = GetUserAccountTypes.fromJsonList(data);
-      if (vc != null) {
-        vc.pause();
-      }
-      await Get.to(optionRegister());
-      if (vc != null) {
-        vc.play();
-      }
-      return;
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgressCreateAccount.value = false;
     }
-
-    isProgressCreateAccount.value = false;
-    validation.value = false;
   }
 
   Future<void> getUserAccountTypes2() async {
-    var data = await myRequest(
-      url: func,
-      method: HttpMethod.post,
-      body: {"name": SiteGetUserAccountTypes},
-    );
-    if (data is bool && data == false) {
-      isProgressCreateAccount.value = false;
-      validation.value = false;
-      return;
-    }
-    if (data.isNotEmpty) {
-      listUserAccountTypes = GetUserAccountTypes.fromJsonList(data);
-      writeGetStorage(listUserAccountTypesKey, data);
+    try {
+      var data = await myRequest(
+        url: 'api/Pages/$SiteGetUserAccountTypes',
+        method: HttpMethod.post,
+        body: {},
+      );
+      if (data is List && data.isNotEmpty) {
+        listUserAccountTypes = GetUserAccountTypes.fromJsonList(data);
+        writeGetStorage(listUserAccountTypesKey, data);
+      }
+    } catch (e, st) {
+      debugPrint('❌ getUserAccountTypes2 error: $e\n$st');
     }
   }
 
@@ -560,60 +618,65 @@ class LoginAndRegisterControl extends GetxController {
     IdentityImage,
     TradeNoImage,
   }) async {
-    var passwordAfterMd5 = textToMd5(password);
     isProgress.value = true;
-    var data = await myRequest(
-      otherBaseUrl: administrationUrl,
-      url: signup,
-      returnHeader: true,
-      method: HttpMethod.post,
-      body: {
-        "ArFirstName": language == "ar" ? firstName : null,
-        "ArMiddlename": language == "ar" ? middleName : null,
-        "ArLastname": language == "ar" ? lastName : null,
-        "EnFirstName": language == "en" ? firstName : null,
-        "EnMiddlename": language == "en" ? middleName : null,
-        "EnLastname": language == "en" ? lastName : null,
-        "Phone": "+966${phone.toString().trim()}",
-        "Password": passwordAfterMd5,
-        "Email": email,
-        "Identity": identificationNumber.isNotEmpty
-            ? identificationNumber
-            : null,
-        "IdentityImage": IdentityImage,
-        "TradeNo": commercialRegistrationNo.isNotEmpty
-            ? commercialRegistrationNo
-            : null,
-        "TradeNoImage": TradeNoImage,
-        "CustGroupID": userAccountTypesTheChosen[0].id,
-        "IsClient": userAccountTypesTheChosen[0].needIdentity,
-      },
-    );
-
-    if (data[0] == true) {
-      isProgress.value = false;
-      isProgress.value = false;
-      validation.value = false;
-      await myRequest(
-        url: update,
-        method: HttpMethod.put,
+    try {
+      var passwordAfterMd5 = textToMd5(password);
+      var data = await myRequest(
+        otherBaseUrl: administrationUrl,
+        url: signup,
+        returnHeader: true,
+        method: HttpMethod.post,
         body: {
-          "Object": "web_users",
-          "filters": "where  IdentityNumber = '$identificationNumber' ",
-          "Values": {'Token': '$fcmToken'},
-          "ObjectSettings": {"MetaData": false},
+          "ArFirstName": language == "ar" ? firstName : null,
+          "ArMiddlename": language == "ar" ? middleName : null,
+          "ArLastname": language == "ar" ? lastName : null,
+          "EnFirstName": language == "en" ? firstName : null,
+          "EnMiddlename": language == "en" ? middleName : null,
+          "EnLastname": language == "en" ? lastName : null,
+          "Phone": "+966${phone.toString().trim()}",
+          "Password": passwordAfterMd5,
+          "Email": email,
+          "Identity": identificationNumber.isNotEmpty
+              ? identificationNumber
+              : null,
+          "IdentityImage": IdentityImage,
+          "TradeNo": commercialRegistrationNo.isNotEmpty
+              ? commercialRegistrationNo
+              : null,
+          "TradeNoImage": TradeNoImage,
+          "CustGroupID": userAccountTypesTheChosen[0].id,
+          "IsClient": userAccountTypesTheChosen[0].needIdentity,
         },
       );
-      Get.offAll(
-        MainView(lastPageNavigator: LoginUserName(isFromSplashScreen: false)),
-      );
-    } else {
-      isProgress.value = false;
-      isProgress.value = false;
+
+      if (data is List && data.isNotEmpty && data[0] == true) {
+        validation.value = false;
+        await myRequest(
+          url: 'api/Pages/Updateweb_users',
+          method: HttpMethod.post,
+          body: {
+            "Filters": "where  IdentityNumber = '$identificationNumber' ",
+            "Values": {'Token': '$fcmToken'},
+          },
+        );
+        Get.offAll(
+          MainView(lastPageNavigator: LoginUserName(isFromSplashScreen: false)),
+        );
+      } else {
+        validation.value = false;
+        textErrorLogin.value =
+            (data is List && data.length >= 2 && data[1] is Map)
+            ? (language == 'en'
+                  ? data[1]['EnDescription']
+                  : data[1]['ArDescription'])
+            : 'somethingWentWrong'.tr;
+      }
+    } catch (e, st) {
+      debugPrint('❌ sendRegistrationPage error: $e\n$st');
       validation.value = false;
-      textErrorLogin.value = (language == 'en'
-          ? data[1]['EnDescription']
-          : data[1]['ArDescription']);
+      textErrorLogin.value = 'somethingWentWrong'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 

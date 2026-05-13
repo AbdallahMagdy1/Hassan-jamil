@@ -168,4 +168,21 @@ const Map<String, String> en = {
   'deleteAccountConfirmationTitle': 'Delete Account Permanent Action',
   'deleteAccountConfirmationMessage':
       'Are you sure you want to delete your account? This action is permanent and cannot be undone. All your data will be removed from our systems.',
+  // Profile update messages
+  'noImageSelected': 'Please select an image first',
+  'profileImageUpdated': 'Profile image updated successfully',
+  'failedToUpdateProfileImage': 'Failed to update profile image',
+  'profileUpdated': 'Profile updated successfully',
+  'failedToUpdateProfile': 'Failed to update profile',
+  'contactInformationUpdated': 'Contact information updated successfully',
+  'failedToUpdateContactInformation': 'Failed to update contact information',
+  // Password update messages
+  'pleaseFillAllFields': 'Please fill in all fields',
+  'passwordsDoNotMatch': 'New passwords do not match',
+  'passwordTooShort': 'Password must be at least 6 characters',
+  'newPasswordSameAsOld':
+      'New password must be different from the current one',
+  'currentPasswordIncorrect': 'Current password is incorrect',
+  'passwordUpdated': 'Password updated successfully',
+  'failedToUpdatePassword': 'Failed to update password',
 };

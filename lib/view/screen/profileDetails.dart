@@ -16,6 +16,17 @@ class profileDetails extends StatelessWidget {
     final isLogin = readGetStorage(loginKey);
     bool isDark = themeModeValue == 'dark';
 
+    // ProfileController may have been constructed in InitialBinding before
+    // the user signed in (so onInit early-returned with no isLogin). On
+    // every entry to this screen, refresh the controller's state from
+    // storage and fetch settings if they aren't loaded yet. Scheduled
+    // post-frame so build() stays pure.
+    if (isLogin != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        controller.ensureLoaded();
+      });
+    }
+
     // Handle null or missing user data
     if (isLogin == null) {
       return Scaffold(
@@ -206,16 +217,14 @@ class profileDetails extends StatelessWidget {
   }
 
   String _getCustomerGroupName(ProfileController controller, dynamic isLogin) {
-    if (isLogin == null || isLogin['CustGroupID'] == null) {
-      return 'clientType'.tr;
-    }
-    var group = controller.listUserAccountTypes
-        .where((e) => e.id == isLogin['CustGroupID']?.toString())
-        .toList();
-    if (group.isNotEmpty) {
-      return language == 'ar' ? group[0].descriptionAr : group[0].descriptionEn;
-    }
-    return 'clientType'.tr;
+    final raw = isLogin?['CustGroupID'];
+    if (raw == null) return 'clientType'.tr;
+    final id = raw.toString();
+    final group = controller.listUserAccountTypes.firstWhereOrNull(
+      (e) => e.id == id,
+    );
+    if (group == null) return 'clientType'.tr;
+    return language == 'ar' ? group.descriptionAr : group.descriptionEn;
   }
 
   // --- TAB UI ---
@@ -361,9 +370,13 @@ class profileDetails extends StatelessWidget {
         }
       }
 
+      // Backend may serialize ID columns as int OR string depending on the
+      // SQL column type, so normalize through tryParse / toString.
+      int? asInt(dynamic v) => v == null ? null : int.tryParse(v.toString());
+
       // Get gender description
       String genderText = '';
-      int? genderId = freshLogin?['GenderID'];
+      int? genderId = asInt(freshLogin?['GenderID']);
       if (genderId != null && controller.genders.isNotEmpty) {
         var gender = controller.genders.firstWhereOrNull(
           (g) => g.id == genderId,
@@ -373,7 +386,9 @@ class profileDetails extends StatelessWidget {
 
       // Get country description
       String countryText = '';
-      int? countryId = freshLogin?['CountryID'];
+      int? countryId = asInt(
+        freshLogin?['CountryID'] ?? freshLogin?['countryID'],
+      );
       if (countryId != null && controller.countries.isNotEmpty) {
         var country = controller.countries.firstWhereOrNull(
           (c) => c.id == countryId,
@@ -383,7 +398,7 @@ class profileDetails extends StatelessWidget {
 
       // Get city description
       String cityText = '';
-      int? cityId = freshLogin?['CityID'];
+      int? cityId = asInt(freshLogin?['CityID'] ?? freshLogin?['cityID']);
       if (cityId != null && controller.cities.isNotEmpty) {
         var city = controller.cities.firstWhereOrNull((c) => c.id == cityId);
         cityText = city?.description ?? '';
@@ -391,7 +406,7 @@ class profileDetails extends StatelessWidget {
 
       // Get account type description
       String accountTypeText = '';
-      String? custGroupId = freshLogin?['CustGroupID'];
+      String? custGroupId = freshLogin?['CustGroupID']?.toString();
       if (custGroupId != null && controller.listUserAccountTypes.isNotEmpty) {
         var accountType = controller.listUserAccountTypes.firstWhereOrNull(
           (a) => a.id == custGroupId,

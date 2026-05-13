@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:get/get.dart';
 import 'package:hj_app/global/queryModel.dart';
 import 'package:hj_app/view/Login/registrationPage.dart';
@@ -22,27 +23,31 @@ class VerificationControl extends GetxController {
 
   Future<void> checkVerification(context, phoneNumber) async {
     isProgress.value = true;
-    var data = await myRequest(
-      url: details,
-      method: HttpMethod.post,
-      body: {
-        "object": "web_users",
-        "option": "column",
-        "filters": "where Phone = '+966$phoneNumber'",
-        "objectsettings": {"metadata": false},
-      },
-    );
-
-    if (data['ApiObjectData'].isNotEmpty) {
-      isProgress.value = false;
-      validation.value = false;
-      writeGetStorage(loginKey, data['ApiObjectData'][0]);
-      Get.offAll(MainView());
-    }
-    if (data['ApiObjectData'].isEmpty) {
-      isProgress.value = false;
+    try {
+      var data = await myRequest(
+        url: 'api/Pages/Detailsweb_users',
+        method: HttpMethod.post,
+        body: {
+          "Option": "column",
+          "Filters": "where Phone = '+966$phoneNumber'",
+          "ObjectSettings": {"MetaData": false},
+        },
+      );
+      final rows = (data is Map) ? data['ApiObjectData'] : null;
+      if (rows is List && rows.isNotEmpty) {
+        validation.value = false;
+        writeGetStorage(loginKey, rows[0]);
+        Get.offAll(MainView());
+      } else {
+        validation.value = false;
+        textErrorLogin.value = 'anUnexpectedErrorOccurred'.tr;
+      }
+    } catch (e, st) {
+      debugPrint('❌ checkVerification error: $e\n$st');
       validation.value = false;
       textErrorLogin.value = 'anUnexpectedErrorOccurred'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
@@ -52,28 +57,31 @@ class VerificationControl extends GetxController {
     verificationCode,
   ) async {
     isProgress.value = true;
-    var data = await myRequest(
-      url: details,
-      method: HttpMethod.post,
-      body: {
-        "object": "web_users",
-        "option": "column",
-        "filters": "where Phone = '+966$phoneNumber'",
-        "objectsettings": {"metadata": false},
-      },
-    );
-
-    if (data['ApiObjectData'].isNotEmpty) {
-      isProgress.value = false;
-      validation.value = false;
-      writeGetStorage(loginKey, data['ApiObjectData'][0]);
-      validation.value = false;
-      Get.to(ResetPassword(phone: phoneNumber));
-    }
-    if (data['ApiObjectData'].isEmpty) {
-      isProgress.value = false;
+    try {
+      var data = await myRequest(
+        url: 'api/Pages/Detailsweb_users',
+        method: HttpMethod.post,
+        body: {
+          "Option": "column",
+          "Filters": "where Phone = '+966$phoneNumber'",
+          "ObjectSettings": {"MetaData": false},
+        },
+      );
+      final rows = (data is Map) ? data['ApiObjectData'] : null;
+      if (rows is List && rows.isNotEmpty) {
+        validation.value = false;
+        writeGetStorage(loginKey, rows[0]);
+        Get.to(ResetPassword(phone: phoneNumber));
+      } else {
+        validation.value = false;
+        textErrorLogin.value = 'anUnexpectedErrorOccurred'.tr;
+      }
+    } catch (e, st) {
+      debugPrint('❌ checkVerificationForForgetPassword error: $e\n$st');
       validation.value = false;
       textErrorLogin.value = 'anUnexpectedErrorOccurred'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
@@ -89,44 +97,54 @@ class VerificationControl extends GetxController {
   }
 
   Future<void> updatePassWordAcrossEmail(context, phoneNumber, password) async {
-    var passwordAfterMd5 = textToMd5(password);
     isProgress.value = true;
-    var data = await myRequest(
-      url: update,
-      method: HttpMethod.put,
-      body: {
-        "Object": "web_users",
-        "filters": "where Phone = '+966$phoneNumber'",
-        "Values": {'Password': passwordAfterMd5, 'Token': '$fcmToken'},
-        "ObjectSettings": {"MetaData": false},
-      },
-    );
-    isProgress.value = false;
+    try {
+      var passwordAfterMd5 = textToMd5(password);
+      var data = await myRequest(
+        url: 'api/Pages/Updateweb_users',
+        method: HttpMethod.post,
+        body: {
+          "Filters": "where Phone = '+966$phoneNumber'",
+          "Values": {'Password': passwordAfterMd5, 'Token': '$fcmToken'},
+        },
+      );
 
-    if (data['MessageNo'] == '202100000000008') {
-      Get.offAll(MainView(navigatorTo: (isLogin != null) ? 0 : 1));
+      if (data is Map &&
+          (data['MessageNo'] == '202100000000008' ||
+              data['MessageNo'] == 202100000000008)) {
+        Get.offAll(MainView(navigatorTo: (isLogin != null) ? 0 : 1));
+      } else {
+        textErrorLogin.value = 'anUnexpectedErrorOccurred'.tr;
+      }
+    } catch (e, st) {
+      debugPrint('❌ updatePassWordAcrossEmail error: $e\n$st');
+      textErrorLogin.value = 'anUnexpectedErrorOccurred'.tr;
+    } finally {
+      isProgress.value = false;
     }
   }
 
   Future<void> getUserAccountTypes2(context, phoneNumber) async {
-    await myRequest(
-      url: update,
-      method: HttpMethod.put,
-      body: {
-        "Object": "web_users",
-        "filters": "where  Phone = '+966$phoneNumber' ",
-        "Values": {'Token': '$fcmToken'},
-        "ObjectSettings": {"MetaData": false},
-      },
-    );
-    var data = await myRequest(
-      url: func,
-      method: HttpMethod.post,
-      body: {"name": SiteGetUserAccountTypes},
-    );
-    if (data.isNotEmpty) {
-      listUserAccountTypes = GetUserAccountTypes.fromJsonList(data);
-      writeGetStorage(listUserAccountTypesKey, data);
+    try {
+      await myRequest(
+        url: 'api/Pages/Updateweb_users',
+        method: HttpMethod.post,
+        body: {
+          "Filters": "where  Phone = '+966$phoneNumber' ",
+          "Values": {'Token': '$fcmToken'},
+        },
+      );
+      var data = await myRequest(
+        url: 'api/Pages/$SiteGetUserAccountTypes',
+        method: HttpMethod.post,
+        body: {},
+      );
+      if (data is List && data.isNotEmpty) {
+        listUserAccountTypes = GetUserAccountTypes.fromJsonList(data);
+        writeGetStorage(listUserAccountTypesKey, data);
+      }
+    } catch (e, st) {
+      debugPrint('❌ getUserAccountTypes2 error: $e\n$st');
     }
   }
 }

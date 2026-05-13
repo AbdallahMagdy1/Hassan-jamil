@@ -23,9 +23,9 @@ class MapController extends GetxController {
   Future<void> centersNearYou() async {
     isProgress.value = true;
     var response = await myRequest(
-      url: func,
+      url: 'api/Pages/site_FetchBranches',
       method: HttpMethod.post,
-      body: {"Name": "site_FetchBranches"},
+      body: {},
     );
     listUserAccountTypes = CentersNearYou.fromJsonList(response);
 

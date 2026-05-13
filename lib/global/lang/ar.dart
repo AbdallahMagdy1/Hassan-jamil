@@ -165,4 +165,20 @@ const Map<String, String> ar = {
   'deleteAccountConfirmationTitle': 'إجراء حذف الحساب نهائي',
   'deleteAccountConfirmationMessage':
       'هل أنت متأكد أنك تريد حذف حسابك؟ هذا الإجراء نهائي ولا يمكن التراجع عنه. سيتم إزالة جميع بياناتك من أنظمتنا.',
+  // Profile update messages
+  'noImageSelected': 'الرجاء اختيار صورة أولاً',
+  'profileImageUpdated': 'تم تحديث صورة الملف الشخصي بنجاح',
+  'failedToUpdateProfileImage': 'فشل تحديث صورة الملف الشخصي',
+  'profileUpdated': 'تم تحديث الملف الشخصي بنجاح',
+  'failedToUpdateProfile': 'فشل تحديث الملف الشخصي',
+  'contactInformationUpdated': 'تم تحديث معلومات الاتصال بنجاح',
+  'failedToUpdateContactInformation': 'فشل تحديث معلومات الاتصال',
+  // Password update messages
+  'pleaseFillAllFields': 'الرجاء تعبئة جميع الحقول',
+  'passwordsDoNotMatch': 'كلمة المرور الجديدة وتأكيدها غير متطابقتين',
+  'passwordTooShort': 'يجب أن تكون كلمة المرور 6 أحرف على الأقل',
+  'newPasswordSameAsOld': 'يجب أن تكون كلمة المرور الجديدة مختلفة عن الحالية',
+  'currentPasswordIncorrect': 'كلمة المرور الحالية غير صحيحة',
+  'passwordUpdated': 'تم تحديث كلمة المرور بنجاح',
+  'failedToUpdatePassword': 'فشل تحديث كلمة المرور',
 };
